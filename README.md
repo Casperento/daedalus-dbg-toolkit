@@ -84,6 +84,7 @@ To configure a Python virtual environment and install the required packages (`pa
 ```
 
 **Options**: This script may require specific paths or configurations. Refer to the script for details.
+- `clean`: Cleans build directories before building
 
 ---
 

@@ -1,10 +1,20 @@
 #!/bin/bash
-# Generates baseline.json for llvm-test-suite
+# Generates baseline.json for llvm-test-suite by building and running tests with specific configurations.
 
 LLVM_TEST_SUITE="/home/reckstein/src/github/llvm-test-suite"
 LIT_RESULTS="/home/reckstein/lit-results"
 TIMEOUT=120
 WORKERS=10
+
+function usage() {
+    echo "Usage: $0 [clean]"
+    echo "  clean: Removes and recreates the build directory before proceeding."
+    exit 1
+}
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    usage
+fi
 
 if [[ "$1" == "clean" ]]; then
     if [[ -d "$LLVM_TEST_SUITE/build" ]]; then
@@ -12,6 +22,9 @@ if [[ "$1" == "clean" ]]; then
     else
         mkdir -p "$LLVM_TEST_SUITE/build"
     fi
+elif [[ -n "$1" ]]; then
+    echo "Error: Unknown argument '$1'"
+    usage
 fi
 
 cmake -G "Ninja" \
@@ -29,6 +42,6 @@ cmake -G "Ninja" \
       -S "$LLVM_TEST_SUITE" \
       -B "$LLVM_TEST_SUITE/build"
 
-cmake --build "$LLVM_TEST_SUITE/build" -- -k 0 -j 10
+cmake --build "$LLVM_TEST_SUITE/build" -- -k 0 -j $WORKERS
 
 llvm-lit --filter-out "GCC-C-execute.*" --timeout $TIMEOUT -j $WORKERS -s -o "$LIT_RESULTS/baseline.json" "$LLVM_TEST_SUITE/build"
