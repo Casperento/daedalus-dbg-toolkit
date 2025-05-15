@@ -1,4 +1,4 @@
-# Errors Debugging and Reduction Framework
+# Daedalus Errors Debugging Framework
 
 This project provides a set of scripts and utilities to automate the process of building, testing, debugging, and reducing LLVM IR programs. The framework is designed to work with the Daedalus LLVM pass and the LLVM Test Suite.
 
