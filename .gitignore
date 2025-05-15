@@ -3,3 +3,4 @@ output/
 errors_summary/
 *.log
 *.txt
+!requirements.txt
