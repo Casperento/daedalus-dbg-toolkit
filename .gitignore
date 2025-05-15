@@ -1,0 +1,5 @@
+venv/
+output/
+errors_summary/
+*.log
+*.txt

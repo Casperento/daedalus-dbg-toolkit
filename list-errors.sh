@@ -1,0 +1,180 @@
+#!/usr/bin/env bash
+#
+# Script: list-errors.sh
+#
+# Brief: Processes LIT test outputs and comparison results to extract failing tests,
+#        generate LLVM IR sources, and collate error logs for analysis.
+#        Supports configurable build, plugin, results, and output directories.
+#
+# Usage examples:
+#  # Basic invocation with positional args
+#  ./list-errors.sh /path/to/build /path/to/libdaedalus /path/to/lit-results
+#
+#  # Using long-form options
+#  ./list-errors.sh \
+#      --build-dir=/path/to/build \
+#      --plugin-dir=/path/to/libdaedalus \
+#      --results-dir=/path/to/lit-results \
+#      --output-dir=/path/to/output
+#
+set -euo pipefail
+IFS=$'\n\t'
+
+# Default directories (will be overridden by args)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BUILD_DIR=""
+PLUGIN_DIR=""
+RESULTS_DIR=""
+OUTPUT_DIR="$SCRIPT_DIR/output"
+
+# Derived paths (initialized later)
+LOG_FILE=""
+SOURCES_DIR=""
+LOGS_DIR=""
+FILES_LIST=""
+COMPARISON_RESULTS=""
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [options]
+
+Options:
+  -h, --help                Show this help message and exit
+  --build-dir <path>        LLVM Test Suite build folder (required)
+  --plugin-dir <path>       Folder containing libdaedalus.so (required)
+  --results-dir <path>      LIT results folder with JSON files (required)
+  --output-dir <path>       Output base directory (default: $OUTPUT_DIR)
+EOF
+}
+
+# Parse options
+PARSED=$(getopt -o h --long help,build-dir:,plugin-dir:,results-dir:,output-dir: -n "$(basename "$0")" -- "$@")
+eval set -- "$PARSED"
+while true; do
+  case "$1" in
+    -h|--help)
+      usage; exit 0;;
+    --build-dir)
+      BUILD_DIR="$2"; shift 2;;
+    --plugin-dir)
+      PLUGIN_DIR="$2"; shift 2;;
+    --results-dir)
+      RESULTS_DIR="$2"; shift 2;;
+    --output-dir)
+      OUTPUT_DIR="$2"; shift 2;;
+    --)
+      shift; break;;
+    *)
+      echo "Unknown option: $1" >&2; usage; exit 1;;
+  esac
+done
+
+# Ensure required arguments are provided
+if [[ -z "$BUILD_DIR" || -z "$PLUGIN_DIR" || -z "$RESULTS_DIR" ]]; then
+  echo "ERROR: --build-dir, --plugin-dir, and --results-dir are required." >&2
+  usage; exit 1
+fi
+
+# Compute script and derived paths
+LOG_FILE="$SCRIPT_DIR/list-errors.log"
+SOURCES_DIR="$OUTPUT_DIR/sources"
+LOGS_DIR="$OUTPUT_DIR/logs"
+FILES_LIST="$LOGS_DIR/files-list.txt"
+COMPARISON_RESULTS="$SCRIPT_DIR/comparison_results.txt"
+SOURCES_SUCC_DIR="$OUTPUT_DIR/sources_comparison_failed"
+
+# Preconditions
+[[ -d "$BUILD_DIR" ]] || { echo "ERROR: Build directory '$BUILD_DIR' not found." >&2; exit 1; }
+[[ -d "$PLUGIN_DIR" ]] || { echo "ERROR: Plugin directory '$PLUGIN_DIR' not found." >&2; exit 1; }
+[[ -f "$PLUGIN_DIR/libdaedalus.so" ]] || { echo "ERROR: libdaedalus.so missing in '$PLUGIN_DIR'." >&2; exit 1; }
+[[ -d "$RESULTS_DIR" ]] || { echo "ERROR: Results directory '$RESULTS_DIR' not found." >&2; exit 1; }
+[[ -f "$RESULTS_DIR/baseline.json" && -f "$RESULTS_DIR/daedalus.json" ]] || \
+  { echo "ERROR: Expected JSON files in '$RESULTS_DIR'." >&2; exit 1; }
+
+# Prepare output
+rm "$LOG_FILE" || true
+touch "$LOG_FILE"
+rm -rf "$OUTPUT_DIR" "$SOURCES_DIR" "$LOGS_DIR" || true
+mkdir -p "$OUTPUT_DIR" "$SOURCES_DIR" "$LOGS_DIR" "$SOURCES_SUCC_DIR"
+
+# Move existing lit-output.log if present
+if [[ -f "$SCRIPT_DIR/lit-output.log" ]]; then
+  mv "$SCRIPT_DIR/lit-output.log" "$LOGS_DIR/"
+fi
+
+# Log configuration
+cat <<EOF | tee -a "$LOG_FILE"
+Build directory  : $BUILD_DIR
+Plugin directory : $PLUGIN_DIR
+Results directory: $RESULTS_DIR
+Output directory : $OUTPUT_DIR
+EOF
+
+# Step 1: Filter lit-output logs
+echo -e "\nFiltering LIT logs..." | tee -a "$LOG_FILE"
+grep --text -B2 ": Compar\(ison failed,\|ed:\)" \
+     "$LOGS_DIR/lit-output.log" > "$LOGS_DIR/comparison_failed.log"
+grep --text -oE ": error: unable to open(.*)" \
+     "$LOGS_DIR/lit-output.log" > "$LOGS_DIR/build_failed.log"
+
+echo "Filtered logs written to $LOGS_DIR" | tee -a "$LOG_FILE"
+
+# Step 2: Generate comparison report
+echo -e "\nGenerating comparison report..." | tee -a "$LOG_FILE"
+python3 "$BUILD_DIR/../utils/compare.py" \
+  --full --diff -m instcount -m size..text \
+  "$RESULTS_DIR/baseline.json" "$RESULTS_DIR/daedalus.json" \
+  > "$COMPARISON_RESULTS"
+echo "Comparison results: $COMPARISON_RESULTS" | tee -a "$LOG_FILE"
+
+# Step 3: List failing test files
+grep -oP "(?<=:: ).*?(?=' has no metrics)" "$COMPARISON_RESULTS" \
+  | sed 's/\.test$/\.e.bc/' > "$FILES_LIST"
+echo "Files list: $FILES_LIST" | tee -a "$LOG_FILE"
+
+# Step 4: Extract source .ll files
+echo -e "\nExtracting IR to $SOURCES_DIR..." | tee -a "$LOG_FILE"
+
+while IFS= read -r file; do
+  src="$BUILD_DIR/$file"
+  if [[ -f "$src" ]]; then
+    file=$(basename "$file")
+    opt -S "$src" -o "$SOURCES_DIR/${file/.bc/.ll}"
+  else
+    echo "Missing: $src" | tee -a "$LOG_FILE"
+  fi
+done < "$FILES_LIST"
+
+# Step 5: Apply Daedalus pass and log results
+echo -e "\nRunning Daedalus pass..." | tee -a "$LOG_FILE"
+TOTAL=0; FAILED_BUILD=0; FAILED_COMP=0
+while IFS= read -r file; do
+  TOTAL=$((TOTAL + 1))
+  src="$BUILD_DIR/$file"
+  base=$(basename "$file")
+  if opt -passes=daedalus \
+         -load-pass-plugin="$PLUGIN_DIR/libdaedalus.so" \
+         -S "$src" -o "$SOURCES_SUCC_DIR/${base/.e.bc/.d.ll}" 2> "$LOGS_DIR/$base.log"; then
+    FAILED_COMP=$((FAILED_COMP + 1))
+  else
+    FAILED_BUILD=$((FAILED_BUILD + 1))
+  fi
+done < "$FILES_LIST"
+
+# Summary
+cat <<EOF | tee -a "$LOG_FILE"
+
+Processed: $TOTAL
+Build failures    : $FAILED_BUILD
+Comparison failures: $FAILED_COMP
+EOF
+
+# Step 6: Collate error logs
+echo -e "\nCollating error logs..." | tee -a "$LOG_FILE"
+grep -B10 -A50 "PLEASE submit a bug report to" "$LOGS_DIR"/*.log \
+  > "$LOGS_DIR/errors.txt"
+
+# Generate grouped summary
+python3 "$SCRIPT_DIR/errors-summary-grouped.py" "$LOGS_DIR/errors.txt"
+
+# ./reduce-programs.sh "$SOURCESFOLDER"
