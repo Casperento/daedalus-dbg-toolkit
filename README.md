@@ -20,6 +20,58 @@ This project provides a set of scripts and utilities to automate the process of 
 │   ├── sources_comparison_failed/
 ```
 
+---
+
+## Requirements
+
+- Bash
+- Python 3
+- LLVM tools (`opt`, `llvm-reduce`)
+- CMake and Ninja (for building the LLVM Test Suite)
+
+### Setting Up a Virtual Environment and Installing Required Packages
+
+To configure a Python virtual environment and install the required packages (`pandas`, `scipy`, `psutil`), follow these steps:
+
+1. **Create a Virtual Environment**:
+   ```bash
+   python3 -m venv venv
+   ```
+
+2. **Activate the Virtual Environment**:
+   - On Linux/macOS:
+     ```bash
+     source venv/bin/activate
+     ```
+   - On Windows:
+     ```bash
+     venv\Scripts\activate
+     ```
+
+3. **Upgrade `pip`**:
+   ```bash
+   pip install --upgrade pip
+   ```
+
+4. **Install Required Packages**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. **Verify Installation**:
+   ```bash
+   pip list
+   ```
+
+   Ensure `pandas`, `scipy`, and `psutil` are listed.
+
+6. **Deactivate the Virtual Environment** (when done):
+   ```bash
+   deactivate
+   ```
+
+---
+
 ## Scripts Overview
 
 ### 1. `gen_baseline.sh`
@@ -151,17 +203,3 @@ python3 errors-summary-grouped.py output/logs/errors.txt
 - `output/sources/`: Contains extracted LLVM IR files.
 - `output/sources_comparison_failed/`: Contains LLVM IR files that failed comparison.
 
----
-
-## Requirements
-
-- Bash
-- Python 3
-- LLVM tools (`opt`, `llvm-reduce`)
-- CMake and Ninja (for building the LLVM Test Suite)
-
----
-
-## License
-
-This project is licensed under the MIT License.
