@@ -128,7 +128,17 @@ fi
 
 # Run LIT tests
 echo "Running LIT tests..."
-if ! llvm-lit --verbose --filter-out "GCC-C-execute.*" --timeout 120 -j "$WORKERS" -s -o "$LIT_RESULTS/daedalus.json" "$LLVM_TEST_SUITE/build" | tee -a "$ERRORS_DBG/lit-output.log"; then
+if ! llvm-lit \
+     --time-tests \
+     --ignore-fail \
+     --verbose \
+     --filter-out "GCC-C-execute.*" \
+     --timeout 120 \
+     -j "$WORKERS" \
+     -s \
+     -o "$LIT_RESULTS/daedalus.json" \
+     "$LLVM_TEST_SUITE/build" \
+     | tee -a "$ERRORS_DBG/lit-output.log"; then
   echo "Error: LIT tests failed. Log saved to $ERRORS_DBG/lit-output.log" >&2
 fi
 

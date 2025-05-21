@@ -30,7 +30,8 @@ OUTPUT_DIR="$SCRIPT_DIR/output"
 # Derived paths (initialized later)
 LOG_FILE=""
 SOURCES_DIR=""
-LOGS_DIR=""
+BC_LOGS_DIR=""
+SCRIPT_LOGS_DIR=""
 FILES_LIST=""
 COMPARISON_RESULTS=""
 
@@ -78,8 +79,9 @@ fi
 # Compute script and derived paths
 LOG_FILE="$SCRIPT_DIR/list-errors.log"
 SOURCES_DIR="$OUTPUT_DIR/sources"
-LOGS_DIR="$OUTPUT_DIR/logs"
-FILES_LIST="$LOGS_DIR/files-list.txt"
+BC_LOGS_DIR="$OUTPUT_DIR/bc_logs"
+SCRIPT_LOGS_DIR="$OUTPUT_DIR/script_logs"
+FILES_LIST="$SCRIPT_LOGS_DIR/files-list.txt"
 COMPARISON_RESULTS="$SCRIPT_DIR/comparison_results.txt"
 SOURCES_SUCC_DIR="$OUTPUT_DIR/sources_comparison_failed"
 
@@ -94,12 +96,12 @@ SOURCES_SUCC_DIR="$OUTPUT_DIR/sources_comparison_failed"
 # Prepare output
 rm "$LOG_FILE" || true
 touch "$LOG_FILE"
-rm -rf "$OUTPUT_DIR" "$SOURCES_DIR" "$LOGS_DIR" || true
-mkdir -p "$OUTPUT_DIR" "$SOURCES_DIR" "$LOGS_DIR" "$SOURCES_SUCC_DIR"
+rm -rf "$OUTPUT_DIR" "$SCRIPT_LOGS_DIR" || true
+mkdir -p "$OUTPUT_DIR" "$SOURCES_DIR" "$BC_LOGS_DIR" "$SCRIPT_LOGS_DIR" "$SOURCES_SUCC_DIR"
 
 # Move existing lit-output.log if present
 if [[ -f "$SCRIPT_DIR/lit-output.log" ]]; then
-  mv "$SCRIPT_DIR/lit-output.log" "$LOGS_DIR/"
+  mv "$SCRIPT_DIR/lit-output.log" "$SCRIPT_LOGS_DIR/"
 fi
 
 # Log configuration
@@ -113,18 +115,26 @@ EOF
 # Step 1: Filter lit-output logs
 echo -e "\nFiltering LIT logs..." | tee -a "$LOG_FILE"
 grep --text -B2 ": Compar\(ison failed,\|ed:\)" \
-     "$LOGS_DIR/lit-output.log" > "$LOGS_DIR/comparison_failed.log"
+     "$SCRIPT_LOGS_DIR/lit-output.log" > "$SCRIPT_LOGS_DIR/comparison_failed.log"
 grep --text -oE ": error: unable to open(.*)" \
-     "$LOGS_DIR/lit-output.log" > "$LOGS_DIR/build_failed.log"
+     "$SCRIPT_LOGS_DIR/lit-output.log" > "$SCRIPT_LOGS_DIR/build_failed.log"
+grep -A1000 "Slowest Tests:" /home/reckstein/src/github/errors-dbg-framework/output/script_logs/lit-output.log \
+     | grep -B1000 "Tests Times:" \
+     | sed '1d;$d' \
+     > "$SCRIPT_LOGS_DIR/slowest_tests.log"
 
-echo "Filtered logs written to $LOGS_DIR" | tee -a "$LOG_FILE"
+echo "Filtered logs written to $SCRIPT_LOGS_DIR" | tee -a "$LOG_FILE"
 
 # Step 2: Generate comparison report
 echo -e "\nGenerating comparison report..." | tee -a "$LOG_FILE"
 python3 "$BUILD_DIR/../utils/compare.py" \
-  --full --diff -m instcount -m size..text \
-  "$RESULTS_DIR/baseline.json" "$RESULTS_DIR/daedalus.json" \
-  > "$COMPARISON_RESULTS"
+        --full \
+        --diff \
+        -m instcount \
+        -m size..text \
+        "$RESULTS_DIR/baseline.json" \
+        "$RESULTS_DIR/daedalus.json" \
+        > "$COMPARISON_RESULTS"
 echo "Comparison results: $COMPARISON_RESULTS" | tee -a "$LOG_FILE"
 
 # Step 3: List failing test files
@@ -154,7 +164,7 @@ while IFS= read -r file; do
   base=$(basename "$file")
   if opt -passes=daedalus \
          -load-pass-plugin="$PLUGIN_DIR/libdaedalus.so" \
-         -S "$src" -o "$SOURCES_SUCC_DIR/${base/.e.bc/.d.ll}" 2> "$LOGS_DIR/$base.log"; then
+         -S "$src" -o "$SOURCES_SUCC_DIR/${base/.e.bc/.d.ll}" 2> "$BC_LOGS_DIR/$base.log"; then
     FAILED_COMP=$((FAILED_COMP + 1))
   else
     FAILED_BUILD=$((FAILED_BUILD + 1))
@@ -171,10 +181,8 @@ EOF
 
 # Step 6: Collate error logs
 echo -e "\nCollating error logs..." | tee -a "$LOG_FILE"
-grep -B10 -A50 "PLEASE submit a bug report to" "$LOGS_DIR"/*.log \
-  > "$LOGS_DIR/errors.txt"
+grep -B10 -A50 "PLEASE submit a bug report to" "$BC_LOGS_DIR"/*.log \
+  > "$SCRIPT_LOGS_DIR/errors.txt"
 
 # Generate grouped summary
-python3 "$SCRIPT_DIR/errors-summary-grouped.py" "$LOGS_DIR/errors.txt"
-
-# ./reduce-programs.sh "$SOURCESFOLDER"
+python3 "$SCRIPT_DIR/errors-summary-grouped.py" "$SCRIPT_LOGS_DIR/errors.txt"
