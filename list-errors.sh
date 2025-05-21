@@ -124,7 +124,7 @@ grep --text -oE ": error: unable to open(.*)" \
      | awk '{print $6}' \
      | sed "s/.*build\/\(.*\)'/\1/g" \
      > "$SCRIPT_LOGS_DIR/build_failed.log"
-grep -A1000 "Slowest Tests:" /home/reckstein/src/github/errors-dbg-framework/output/script_logs/lit-output.log \
+grep -A1000 "Slowest Tests:" "$SCRIPT_LOGS_DIR/lit-output.log" \
      | grep -B1000 "Tests Times:" \
      | sed '$d' \
      > "$SCRIPT_LOGS_DIR/slowest_tests.log"
