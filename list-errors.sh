@@ -115,12 +115,18 @@ EOF
 # Step 1: Filter lit-output logs
 echo -e "\nFiltering LIT logs..." | tee -a "$LOG_FILE"
 grep --text -B2 ": Compar\(ison failed,\|ed:\)" \
-     "$SCRIPT_LOGS_DIR/lit-output.log" > "$SCRIPT_LOGS_DIR/comparison_failed.log"
+     "$SCRIPT_LOGS_DIR/lit-output.log" \
+     | awk '/fpcmp-target /{print $3}' \
+     | sed 's/.*build\///g' \
+     > "$SCRIPT_LOGS_DIR/comparison_failed.log"
 grep --text -oE ": error: unable to open(.*)" \
-     "$SCRIPT_LOGS_DIR/lit-output.log" > "$SCRIPT_LOGS_DIR/build_failed.log"
+     "$SCRIPT_LOGS_DIR/lit-output.log" \
+     | awk '{print $6}' \
+     | sed "s/.*build\/\(.*\)'/\1/g" \
+     > "$SCRIPT_LOGS_DIR/build_failed.log"
 grep -A1000 "Slowest Tests:" /home/reckstein/src/github/errors-dbg-framework/output/script_logs/lit-output.log \
      | grep -B1000 "Tests Times:" \
-     | sed '1d;$d' \
+     | sed '$d' \
      > "$SCRIPT_LOGS_DIR/slowest_tests.log"
 
 echo "Filtered logs written to $SCRIPT_LOGS_DIR" | tee -a "$LOG_FILE"

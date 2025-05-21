@@ -10,14 +10,16 @@ This project provides a set of scripts and utilities to automate the process of 
 ├── gen_daedalus.sh
 ├── list-errors.sh
 ├── reduce-programs.sh
+├── extract-func.sh
 ├── errors-summary-grouped.py
 ├── errors_summary/
 │   ├── errors_counts.csv
 │   ├── errors_summary_grouped.csv
 ├── output/
-│   ├── logs/
-│   ├── sources/
-│   ├── sources_comparison_failed/
+│   ├── bc_logs/ # Contains logs for each .bc file run by LIT.
+│   ├── script_logs/ # Contains `list-errors.sh` logs.
+│   ├── sources/ # Contains extracted LLVM IR files.
+│   ├── sources_comparison_failed/ # Contains LLVM IR files that failed comparison.
 ```
 
 ---
@@ -26,10 +28,10 @@ This project provides a set of scripts and utilities to automate the process of 
 
 - Bash
 - Python 3
-- LLVM tools (`opt`, `llvm-reduce`)
+- LLVM tools (`opt`, `llvm-reduce`, `llvm-extract`)
 - CMake and Ninja (for building the LLVM Test Suite)
 
-### Setting Up a Virtual Environment and Installing Required Packages
+### Installing Required Packages
 
 To configure a Python virtual environment and install the required packages (`pandas`, `scipy`, `psutil`), follow these steps:
 
@@ -156,7 +158,30 @@ To configure a Python virtual environment and install the required packages (`pa
 
 ---
 
-### 5. `errors-summary-grouped.py`
+### 5. `extract-func.sh`
+
+**Purpose**: Extracts a single function from an LLVM IR (`.ll`) file using `llvm-extract`.
+
+**Usage**:
+```bash
+./extract-func.sh <llvm-ir-file> <function-name>
+```
+
+**Arguments**:
+- `<llvm-ir-file>`: Path to the LLVM IR file (`.ll`) from which to extract the function.
+- `<function-name>`: Name of the function to extract (without the `@` prefix).
+
+**Example**:
+```bash
+./extract-func.sh output/sources/foo.ll main
+```
+
+**Output**:
+- A new `.ll` file containing only the extracted function, named `<llvm-ir-file>.<function-name>.ll` (e.g., `foo.main.ll`).
+
+---
+
+### 6. `errors-summary-grouped.py`
 
 **Purpose**: Analyzes error logs and generates grouped summaries and counts of errors.
 
@@ -179,6 +204,8 @@ python3 errors-summary-grouped.py output/logs/errors.txt
 
 ---
 
+
+
 ## Workflow
 
 1. **Generate Baseline**:
@@ -196,11 +223,7 @@ python3 errors-summary-grouped.py output/logs/errors.txt
 5. **Reduce Programs**:
    Use `reduce-programs.sh` to minimize faulty LLVM IR programs for debugging.
 
----
+6. **Extract Functions**:
+   Use `extract-func.sh` to extract a single function from an LLVM IR file for focused debugging or analysis.
 
-## Output Directory Structure
-
-- `output/logs/`: Contains logs for each test, including errors.
-- `output/sources/`: Contains extracted LLVM IR files.
-- `output/sources_comparison_failed/`: Contains LLVM IR files that failed comparison.
 
