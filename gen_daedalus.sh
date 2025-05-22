@@ -29,6 +29,7 @@ ERRORS_DBG="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" # current script dire
 LIT_RESULTS="/home/reckstein/lit-results"
 DAEDALUS_BRANCH="main"
 WORKERS=10
+TIMEOUT=600
 CLEAN=false
 UPGRADE=false
 
@@ -42,6 +43,7 @@ Options:
   -u, --upgrade            Fetch and pull latest Daedalus commits
   -b, --branch <name>      Checkout this Daedalus branch (default: $DAEDALUS_BRANCH)
   -w, --workers <n>        Number of parallel workers (default: $WORKERS)
+  -t, --timeout <n>        Timeout to set for LIT (default $TIMEOUT)
   --llvm-project <path>    Path to LLVM project (default: $LLVM_PROJECT)
   --llvm-test-suite <path> Path to LLVM test suite (default: $LLVM_TEST_SUITE)
   --daedalus <path>        Path to Daedalus project (default: $DAEDALUS)
@@ -51,7 +53,7 @@ EOF
 }
 
 # Parse arguments
-if ! PARSED=$(getopt -o hcub:w: --long help,clean,upgrade,branch:,workers:,llvm-project:,llvm-test-suite:,daedalus:,errors-dbg:,lit-results: -n "$(basename "$0")" -- "$@"); then
+if ! PARSED=$(getopt -o hcub:w:t: --long help,clean,upgrade,branch:,workers:,timeout:,llvm-project:,llvm-test-suite:,daedalus:,errors-dbg:,lit-results: -n "$(basename "$0")" -- "$@"); then
   usage; exit 1
 fi
 eval set -- "$PARSED"
@@ -62,6 +64,7 @@ while true; do
     -u|--upgrade) UPGRADE=true; shift;;
     -b|--branch) DAEDALUS_BRANCH="$2"; shift 2;;
     -w|--workers) WORKERS="$2"; shift 2;;
+    -t|--timeout) TIMEOUT="$2"; shift 2;;
     --llvm-project) LLVM_PROJECT="$2"; shift 2;;
     --llvm-test-suite) LLVM_TEST_SUITE="$2"; shift 2;;
     --daedalus) DAEDALUS="$2"; shift 2;;
@@ -133,7 +136,7 @@ if ! llvm-lit \
      --ignore-fail \
      --verbose \
      --filter-out "GCC-C-execute.*" \
-     --timeout 120 \
+     --timeout $TIMEOUT \
      -j "$WORKERS" \
      -s \
      -o "$LIT_RESULTS/daedalus.json" \
