@@ -12,6 +12,7 @@ def parse_errors(file_path):
         r"get_data_dependences_for",
         r"Instruction does not dominate all uses!",
         r"PHINode should have one entry for each predecessor of its parent basic block!",
+        r"PHI node has multiple entries for the same basic block with different incoming values!",
         r"Entry block to function must not have predecessors!",
         r"Basic Block in function '(.+)' does not have terminator!",
         r"Only PHI nodes may reference their own value!",
