@@ -17,6 +17,7 @@ def parse_errors(file_path):
         r"Basic Block in function '(.+)' does not have terminator!",
         r"Only PHI nodes may reference their own value!",
         r"Assertion\s`(.+)\sfailed\.",
+        r"Referring to an argument in another function!"
     ]
     patterns = [re.compile(p) for p in raw_patterns]
 
