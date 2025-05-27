@@ -10,6 +10,7 @@ def parse_errors(file_path):
     raw_patterns = [
         r"llvm::ProgramSlice::populateBBsWithInsts\(llvm::Function\*\)",
         r"get_data_dependences_for",
+        r"appendBlockGatesToPhiParent",
         r"Instruction does not dominate all uses!",
         r"PHINode should have one entry for each predecessor of its parent basic block!",
         r"PHI node has multiple entries for the same basic block with different incoming values!",
@@ -17,7 +18,7 @@ def parse_errors(file_path):
         r"Basic Block in function '(.+)' does not have terminator!",
         r"Only PHI nodes may reference their own value!",
         r"Assertion\s`(.+)\sfailed\.",
-        r"Referring to an argument in another function!"
+        r"Referring to an argument in another function!",
     ]
     patterns = [re.compile(p) for p in raw_patterns]
 
