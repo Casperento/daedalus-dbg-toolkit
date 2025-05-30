@@ -116,7 +116,7 @@ EOF
 echo -e "\nFiltering LIT logs..." | tee -a "$LOG_FILE"
 grep --text -B2 ": Compar\(ison failed,\|ed:\)" \
      "$SCRIPT_LOGS_DIR/lit-output.log" \
-     | awk '/fpcmp-target /{print $3}' \
+     | awk '/\s*.reference_output/{print $NF}' \
      | sed 's/.*build\///g' \
      > "$SCRIPT_LOGS_DIR/comparison_failed.log"
 grep --text -oE ": error: unable to open(.*)" \
