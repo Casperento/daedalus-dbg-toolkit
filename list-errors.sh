@@ -119,7 +119,7 @@ grep --text -B2 ": Compar\(ison failed,\|ed:\)" \
      | awk '/\s*.reference_output/{print $NF}' \
      | sed 's/.*build\///g' \
      > "$SCRIPT_LOGS_DIR/comparison_failed.log"
-grep --text -oE ": error: unable to open(.*)" \
+grep --text -oE ": error: (unable to open|child terminated)(.*)" \
      "$SCRIPT_LOGS_DIR/lit-output.log" \
      | awk '{print $6}' \
      | sed "s/.*build\/\(.*\)'/\1/g" \
