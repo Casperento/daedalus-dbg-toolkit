@@ -131,23 +131,11 @@ fi
 
 # Run LIT tests
 echo "Running LIT tests..."
-# if ! llvm-lit \
-#      --time-tests \
-#      --ignore-fail \
-#      --verbose \
-#      --filter-out "GCC-C-execute.*" \
-#      --timeout $TIMEOUT \
-#      -j "$WORKERS" \
-#      -s \
-#      -o "$LIT_RESULTS/daedalus.json" \
-#      "$LLVM_TEST_SUITE/build" \
-#      | tee -a "$ERRORS_DBG/lit-output.log"; then
-#   echo "Error: LIT tests failed. Log saved to $ERRORS_DBG/lit-output.log" >&2
-# fi
 if ! llvm-lit \
      --time-tests \
      --ignore-fail \
      --verbose \
+     --filter-out "GCC-C-execute.*" \
      --timeout $TIMEOUT \
      -j "$WORKERS" \
      -s \
@@ -156,6 +144,18 @@ if ! llvm-lit \
      | tee -a "$ERRORS_DBG/lit-output.log"; then
   echo "Error: LIT tests failed. Log saved to $ERRORS_DBG/lit-output.log" >&2
 fi
+# if ! llvm-lit \
+#      --time-tests \
+#      --ignore-fail \
+#      --verbose \
+#      --timeout $TIMEOUT \
+#      -j "$WORKERS" \
+#      -s \
+#      -o "$LIT_RESULTS/daedalus.json" \
+#      "$LLVM_TEST_SUITE/build" \
+#      | tee -a "$ERRORS_DBG/lit-output.log"; then
+#   echo "Error: LIT tests failed. Log saved to $ERRORS_DBG/lit-output.log" >&2
+# fi
 
 # Post-process errors
 echo "Extracting errors..."
