@@ -19,6 +19,7 @@ def parse_errors(file_path):
         r"Only PHI nodes may reference their own value!",
         r"Assertion\s`(.+)\sfailed\.",
         r"Referring to an argument in another function!",
+        r"Referring to a basic block in another function!"
     ]
     patterns = [re.compile(p) for p in raw_patterns]
 
