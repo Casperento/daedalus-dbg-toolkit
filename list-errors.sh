@@ -96,7 +96,7 @@ SOURCES_SUCC_DIR="$OUTPUT_DIR/sources_comparison_failed"
 # Prepare output
 rm "$LOG_FILE" || true
 touch "$LOG_FILE"
-rm -rf "$OUTPUT_DIR" "$SCRIPT_LOGS_DIR" || true
+rm -rf "$OUTPUT_DIR" || true
 mkdir -p "$OUTPUT_DIR" "$SOURCES_DIR" "$BC_LOGS_DIR" "$SCRIPT_LOGS_DIR" "$SOURCES_SUCC_DIR"
 
 # Move existing lit-output.log if present
