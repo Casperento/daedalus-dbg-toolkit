@@ -84,37 +84,57 @@ def convert_to_tsv(input_file, output_file):
     negative_geomean_sizetext = geomean(diff_sizetext_col[diff_sizetext_col < 0])
     zero_geomean_sizetext = geomean(diff_sizetext_col[diff_sizetext_col == 0])
 
-    # Create summary DataFrame
-    summary_df = pd.DataFrame(
+    # Create summary DataFrames for each category
+    # Larger Programs
+    larger_df = pd.DataFrame(
         {
-            "Positive Count": [positive_count_instcount, positive_count_sizetext],
-            "Positive %": [positive_percent_instcount, positive_percent_sizetext],
-            "Positive Geomean": [positive_geomean_instcount, positive_geomean_sizetext],
-            "Negative Count": [negative_count_instcount, negative_count_sizetext],
-            "Negative %": [negative_percent_instcount, negative_percent_sizetext],
-            "Negative Geomean": [negative_geomean_instcount, negative_geomean_sizetext],
-            "Zero Count": [zero_count_instcount, zero_count_sizetext],
-            "Zero %": [zero_percent_instcount, zero_percent_sizetext],
-            "Zero Geomean": [zero_geomean_instcount, zero_geomean_sizetext],
-            "Overall Geomean": [geomean_diff_instcount, geomean_diff_textsize],
+            "Count": [positive_count_instcount, positive_count_sizetext],
+            "%": [positive_percent_instcount, positive_percent_sizetext],
+            "Geomean": [positive_geomean_instcount, positive_geomean_sizetext],
+        },
+        index=["Instcount", "Size.text"],
+    )
+    # Smaller Programs
+    smaller_df = pd.DataFrame(
+        {
+            "Count": [negative_count_instcount, negative_count_sizetext],
+            "%": [negative_percent_instcount, negative_percent_sizetext],
+            "Geomean": [negative_geomean_instcount, negative_geomean_sizetext],
+        },
+        index=["Instcount", "Size.text"],
+    )
+    # Unchanged Programs
+    unchanged_df = pd.DataFrame(
+        {
+            "Count": [zero_count_instcount, zero_count_sizetext],
+            "%": [zero_percent_instcount, zero_percent_sizetext],
+            "Geomean": [zero_geomean_instcount, zero_geomean_sizetext],
+        },
+        index=["Instcount", "Size.text"],
+    )
+    # Add Overall summary DataFrame with count and geomean
+    overall_Df = pd.DataFrame(
+        {
+            "Count": [total_rows, total_rows],
+            "Geomean": [geomean_diff_instcount, geomean_diff_textsize],
         },
         index=["Instcount", "Size.text"],
     )
 
-    # Format float columns to 2 decimal places
-    float_cols = [
-        "Positive %",
-        "Positive Geomean",
-        "Negative %",
-        "Negative Geomean",
-        "Zero %",
-        "Zero Geomean",
-        "Overall Geomean",
-    ]
-    for col in float_cols:
-        summary_df[col] = summary_df[col].apply(lambda x: f"{x*100:.2f}%")
+    # Format float columns to 2 decimal places for percent and geomean
+    for df_ in [larger_df, smaller_df, unchanged_df]:
+        df_["%"] = df_["%"].apply(lambda x: f"{x*100:.2f}%")
+        df_["Geomean"] = df_["Geomean"].apply(lambda x: f"{x*100:.2f}%")
+    overall_Df["Geomean"] = overall_Df["Geomean"].apply(lambda x: f"{x*100:.2f}%")
 
-    print(tabulate(summary_df, headers='keys', tablefmt='psql'))
+    print("Larger Programs:")
+    print(tabulate(larger_df, headers='keys', tablefmt='psql'))
+    print("\nSmaller Programs:")
+    print(tabulate(smaller_df, headers='keys', tablefmt='psql'))
+    print("\nUnchanged Programs:")
+    print(tabulate(unchanged_df, headers='keys', tablefmt='psql'))
+    print("\nOverall:")
+    print(tabulate(overall_Df, headers='keys', tablefmt='psql'))
 
 
 if __name__ == "__main__":

@@ -26,9 +26,10 @@ find "$TARGET_DIR" -maxdepth 1 -type f -name "*.ll" | while IFS= read -r llfile;
         base=$(basename "$base" .e)
         func=$(echo "$dotfile" | sed 's/^\.//; s/\.dot$//')
         pdfname="${base}.${func}.dot.pdf"
-
-        echo "  Converting $dotfile to $pdfname"
-        if ! dot -Tpdf "$dotfile" -o "$pdfname"; then
+        output_pdf_dir="$TARGET_DIR/$pdfname"
+        
+        echo "  Converting $dotfile to $output_pdf_dir"
+        if ! dot -Tpdf "$dotfile" -o "$output_pdf_dir"; then
             echo "  Warning: Failed to convert $dotfile to $pdfname. Skipping."
             rm "$dotfile"
             continue

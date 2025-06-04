@@ -162,6 +162,7 @@ echo "Extracting errors..."
 "$ERRORS_DBG/list-errors.sh" \
   --build-dir "$LLVM_TEST_SUITE/build" \
   --plugin-dir "$DAEDALUS/build/lib" \
-  --results-dir "$LIT_RESULTS"
+  --results-dir "$LIT_RESULTS" \
+  --clear
 
 exit 0

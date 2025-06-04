@@ -45,11 +45,15 @@ Options:
   --plugin-dir <path>       Folder containing libdaedalus.so (required)
   --results-dir <path>      LIT results folder with JSON files (required)
   --output-dir <path>       Output base directory (default: $OUTPUT_DIR)
+  --print-dots              Print dots during processing (default: no)
+  --clear                   Clear output directories before processing (default: no)
 EOF
 }
 
 # Parse options
-PARSED=$(getopt -o h --long help,build-dir:,plugin-dir:,results-dir:,output-dir: -n "$(basename "$0")" -- "$@")
+PRINT_DOTS=false
+CLEAR_OUTPUT=false
+PARSED=$(getopt -o h --long help,build-dir:,plugin-dir:,results-dir:,output-dir:,print-dots,clear -n "$(basename "$0")" -- "$@")
 eval set -- "$PARSED"
 while true; do
   case "$1" in
@@ -63,6 +67,10 @@ while true; do
       RESULTS_DIR="$2"; shift 2;;
     --output-dir)
       OUTPUT_DIR="$2"; shift 2;;
+    --print-dots)
+      PRINT_DOTS=true; shift;;
+    --clear)
+      CLEAR_OUTPUT=true; shift;;
     --)
       shift; break;;
     *)
@@ -84,6 +92,7 @@ SCRIPT_LOGS_DIR="$OUTPUT_DIR/script_logs"
 FILES_LIST="$SCRIPT_LOGS_DIR/files-list.txt"
 COMPARISON_RESULTS="$SCRIPT_DIR/comparison_results.txt"
 SOURCES_SUCC_DIR="$OUTPUT_DIR/sources_comparison_failed"
+ERRORS_SUMMARY_DIR="$OUTPUT_DIR/errors_summary"
 
 # Preconditions
 [[ -d "$BUILD_DIR" ]] || { echo "ERROR: Build directory '$BUILD_DIR' not found." >&2; exit 1; }
@@ -93,10 +102,16 @@ SOURCES_SUCC_DIR="$OUTPUT_DIR/sources_comparison_failed"
 [[ -f "$RESULTS_DIR/baseline.json" && -f "$RESULTS_DIR/daedalus.json" ]] || \
   { echo "ERROR: Expected JSON files in '$RESULTS_DIR'." >&2; exit 1; }
 
+
+# Clear output directories if requested
+if [[ "${CLEAR_OUTPUT:-false}" == "true" ]]; then
+  echo "Clearing output directories..." | tee -a "$LOG_FILE"
+  rm -rf "$FILES_LIST" "$SOURCES_DIR" "$BC_LOGS_DIR" "$SCRIPT_LOGS_DIR" "$SOURCES_SUCC_DIR" "$ERRORS_SUMMARY_DIR"
+fi
+
 # Prepare output
 rm "$LOG_FILE" || true
 touch "$LOG_FILE"
-rm -rf "$OUTPUT_DIR" || true
 mkdir -p "$OUTPUT_DIR" "$SOURCES_DIR" "$BC_LOGS_DIR" "$SCRIPT_LOGS_DIR" "$SOURCES_SUCC_DIR"
 
 # Move existing lit-output.log if present
@@ -192,3 +207,22 @@ grep -B10 -A50 "PLEASE submit a bug report to" "$BC_LOGS_DIR"/*.log \
 
 # Generate grouped summary
 python3 "$SCRIPT_DIR/errors-summary-grouped.py" "$SCRIPT_LOGS_DIR/errors.txt"
+
+# Analyze comparison results
+python3 analyze_comparison_results.py
+
+# Print dots if requested
+if [[ "${PRINT_DOTS:-false}" == "true" ]]; then
+  echo -e "\nGenerating .dot files..." | tee -a "$LOG_FILE"
+  for ll_file in "$SOURCES_DIR"/*.ll; do
+    [[ -f "$ll_file" ]] || continue
+    name=$(basename "$ll_file" .ll)
+    name=$(basename "$ll_file" .e)
+    dot_dir="$OUTPUT_DIR/dots/$name"
+    mkdir -p "$dot_dir"
+    cp "$ll_file" "$dot_dir/"
+    bash ./ll2dot.sh "$dot_dir/"
+  done
+fi
+
+exit 0
