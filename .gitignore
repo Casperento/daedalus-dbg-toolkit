@@ -4,3 +4,4 @@ errors_summary/
 *.log
 *.txt
 !requirements.txt
+*.tsv

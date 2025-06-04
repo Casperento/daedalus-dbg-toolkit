@@ -19,6 +19,7 @@ fi
 for source_file in "$SOURCES_DIR"/*.ll; do
   if [ -f "$source_file" ]; then
     filename=$(basename "$source_file" .ll)
+    filename=$(basename "$filename" .e)
     output_file="$OUTPUT_DIR/${filename}_errors.log"
 
     echo "Processing $source_file..."
