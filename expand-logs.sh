@@ -2,6 +2,7 @@
 
 SOURCES_DIR="./output/sources"
 OUTPUT_DIR="./output/extended_bc_logs"
+LIBDAEDALUS_DIR="$HOME/src/github/Daedalus/build/lib/libdaedalus.so"
 
 if [ ! -d "$OUTPUT_DIR" ]; then
   mkdir -p "$OUTPUT_DIR"
@@ -27,7 +28,7 @@ for source_file in "$SOURCES_DIR"/*.ll; do
     opt -stats \
         -debug-only=daedalus,ProgramSlice \
         -passes=daedalus \
-        -load-pass-plugin ~/src/github/Daedalus/build/lib/libdaedalus.so \
+        -load-pass-plugin "$LIBDAEDALUS_DIR" \
         -disable-output "$source_file" \
         &> "$output_file"
   fi
