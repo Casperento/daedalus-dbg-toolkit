@@ -45,7 +45,7 @@ Options:
   --plugin-dir <path>       Folder containing libdaedalus.so (required)
   --results-dir <path>      LIT results folder with JSON files (required)
   --output-dir <path>       Output base directory (default: $OUTPUT_DIR)
-  --print-dots              Print dots during processing (default: no)
+  --print-dots              Print dots after processing (default: no)
   --clear                   Clear output directories before processing (default: no)
 EOF
 }
@@ -170,7 +170,7 @@ while IFS= read -r file; do
   src="$BUILD_DIR/$file"
   if [[ -f "$src" ]]; then
     file=$(basename "$file")
-    opt -S "$src" -o "$SOURCES_DIR/${file/.bc/.ll}"
+    opt -S "$src" -o "$SOURCES_DIR/${file/.e.bc/.ll}"
   else
     echo "Missing: $src" | tee -a "$LOG_FILE"
   fi
@@ -213,16 +213,7 @@ python3 analyze_comparison_results.py
 
 # Print dots if requested
 if [[ "${PRINT_DOTS:-false}" == "true" ]]; then
-  echo -e "\nGenerating .dot files..." | tee -a "$LOG_FILE"
-  for ll_file in "$SOURCES_DIR"/*.ll; do
-    [[ -f "$ll_file" ]] || continue
-    name=$(basename "$ll_file" .ll)
-    name=$(basename "$ll_file" .e)
-    dot_dir="$OUTPUT_DIR/dots/$name"
-    mkdir -p "$dot_dir"
-    cp "$ll_file" "$dot_dir/"
-    bash ./ll2dot.sh "$dot_dir/"
-  done
+  bash "$SCRIPT_DIR/print-dots.sh" "$SOURCES_DIR"
 fi
 
 exit 0

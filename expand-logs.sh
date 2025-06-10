@@ -4,11 +4,10 @@ SOURCES_DIR="./output/sources"
 OUTPUT_DIR="./output/extended_bc_logs"
 LIBDAEDALUS_DIR="$HOME/src/github/Daedalus/build/lib/libdaedalus.so"
 
-if [ ! -d "$OUTPUT_DIR" ]; then
-  mkdir -p "$OUTPUT_DIR"
-else
+if [ -d "$OUTPUT_DIR" ]; then
   rm -rf "$OUTPUT_DIR"
 fi
+mkdir -p "$OUTPUT_DIR"
 
 # Check if sources directory exists
 if [ ! -d "$SOURCES_DIR" ]; then
