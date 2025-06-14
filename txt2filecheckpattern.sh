@@ -29,6 +29,6 @@ fi
 # Apply sed transformations to the input file
 sed -i '1s/^/; CHECK: /' "$INPUTFILE"
 sed -i 's/^/; CHECK-NEXT: /g' "$INPUTFILE"
-sed -i 's/^; CHECK-NEXT: $/;CHECK-EMPTY:/g' "$INPUTFILE"
+sed -i 's/^; CHECK-NEXT: $/; CHECK-EMPTY:/g' "$INPUTFILE"
 sed -i '1s/; CHECK-NEXT: //g' "$INPUTFILE"
 sed -i 's/__[0-9]\+(/__[[ID:[0-9]+]](/g' "$INPUTFILE"
