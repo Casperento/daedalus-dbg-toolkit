@@ -89,7 +89,7 @@ def convert_to_tsv(input_file, output_file):
     larger_df = pd.DataFrame(
         {
             "Count": [positive_count_instcount, positive_count_sizetext],
-            "%": [positive_percent_instcount, positive_percent_sizetext],
+            "% of total": [positive_percent_instcount, positive_percent_sizetext],
             "Geomean": [positive_geomean_instcount, positive_geomean_sizetext],
         },
         index=["Instcount", "Size.text"],
@@ -98,7 +98,7 @@ def convert_to_tsv(input_file, output_file):
     smaller_df = pd.DataFrame(
         {
             "Count": [negative_count_instcount, negative_count_sizetext],
-            "%": [negative_percent_instcount, negative_percent_sizetext],
+            "% of total": [negative_percent_instcount, negative_percent_sizetext],
             "Geomean": [negative_geomean_instcount, negative_geomean_sizetext],
         },
         index=["Instcount", "Size.text"],
@@ -107,7 +107,7 @@ def convert_to_tsv(input_file, output_file):
     unchanged_df = pd.DataFrame(
         {
             "Count": [zero_count_instcount, zero_count_sizetext],
-            "%": [zero_percent_instcount, zero_percent_sizetext],
+            "% of total": [zero_percent_instcount, zero_percent_sizetext],
             "Geomean": [zero_geomean_instcount, zero_geomean_sizetext],
         },
         index=["Instcount", "Size.text"],
@@ -115,7 +115,7 @@ def convert_to_tsv(input_file, output_file):
     # Add Overall summary DataFrame with count and geomean
     overall_Df = pd.DataFrame(
         {
-            "Count": [total_rows, total_rows],
+            "Total Programs": [total_rows, total_rows],
             "Geomean": [geomean_diff_instcount, geomean_diff_textsize],
         },
         index=["Instcount", "Size.text"],
@@ -123,17 +123,17 @@ def convert_to_tsv(input_file, output_file):
 
     # Format float columns to 2 decimal places for percent and geomean
     for df_ in [larger_df, smaller_df, unchanged_df]:
-        df_["%"] = df_["%"].apply(lambda x: f"{x*100:.2f}%")
+        df_["% of total"] = df_["% of total"].apply(lambda x: f"{x*100:.2f}%")
         df_["Geomean"] = df_["Geomean"].apply(lambda x: f"{x*100:.2f}%")
     overall_Df["Geomean"] = overall_Df["Geomean"].apply(lambda x: f"{x*100:.2f}%")
 
-    print("Larger Programs:")
+    print("Programs that got larger:")
     print(tabulate(larger_df, headers='keys', tablefmt='psql'))
-    print("\nSmaller Programs:")
+    print("\nPrograms that got smaller:")
     print(tabulate(smaller_df, headers='keys', tablefmt='psql'))
-    print("\nUnchanged Programs:")
+    print("\nPrograms that didn't change:")
     print(tabulate(unchanged_df, headers='keys', tablefmt='psql'))
-    print("\nOverall:")
+    print("\nOverall metrics:")
     print(tabulate(overall_Df, headers='keys', tablefmt='psql'))
 
 

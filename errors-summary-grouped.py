@@ -78,9 +78,9 @@ def parse_errors(file_path):
         ):
             writer.writerow([err, cnt])
 
-    print(f"→ Per-file summary written to: {summary_csv}")
-    print(f"→ Per-error counts written to: {counts_csv}")
-    print(f"→ Total files with at least one error: {total_files}")
+    print(f"--> ummary written to: {summary_csv}")
+    print(f"--> rror counts written to: {counts_csv}")
+    print(f"--> otal files with at least one error: {total_files}")
 
 
 if __name__ == "__main__":

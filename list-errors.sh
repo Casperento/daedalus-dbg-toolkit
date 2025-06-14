@@ -35,6 +35,13 @@ SCRIPT_LOGS_DIR=""
 FILES_LIST=""
 COMPARISON_RESULTS=""
 
+# Record the start time of the script
+if [[ -f "$SCRIPT_DIR/experiment-start-time.log" ]]; then
+  script_start_time=$(cat "$SCRIPT_DIR/experiment-start-time.log")
+else
+  script_start_time=$(date +%s)
+fi
+
 usage() {
   cat <<EOF
 Usage: $(basename "$0") [options]
@@ -209,11 +216,17 @@ grep -B10 -A50 "PLEASE submit a bug report to" "$BC_LOGS_DIR"/*.log \
 python3 "$SCRIPT_DIR/errors-summary-grouped.py" "$SCRIPT_LOGS_DIR/errors.txt"
 
 # Analyze comparison results
-python3 analyze_comparison_results.py
+python3 analyze_comparison_results.py > "$SCRIPT_LOGS_DIR/comparison_analysis.txt"
+tee -a "$LOG_FILE" < "$SCRIPT_LOGS_DIR/comparison_analysis.txt"
+echo -e "--> omparison analysis written to: $SCRIPT_LOGS_DIR/comparison_analysis.txt"
 
 # Print dots if requested
 if [[ "${PRINT_DOTS:-false}" == "true" ]]; then
   bash "$SCRIPT_DIR/print-dots.sh" "$SOURCES_DIR"
 fi
+
+script_end_time=$(date +%s)
+script_elapsed=$((script_end_time - script_start_time))
+echo "Total script runtime: ${script_elapsed} seconds" | tee -a "$LOG_FILE"
 
 exit 0

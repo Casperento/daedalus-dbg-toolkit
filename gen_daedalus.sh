@@ -103,6 +103,9 @@ if [[ "$UPGRADE" == true ]]; then
   git -C "$DAEDALUS" pull
 fi
 
+script_start_time=$(date +%s)
+echo "$script_start_time" > "$ERRORS_DBG/experiment-start-time.log"
+
 # Build Daedalus
 echo "Building libdaedalus.so..."
 cmake -G Ninja -DLLVM_DIR="$LLVM_PROJECT" -S "$DAEDALUS" -B "$DAEDALUS/build"
