@@ -208,7 +208,6 @@ Comparison failures: $FAILED_COMP
 EOF
 
 # Step 6: Collate error logs
-echo -e "\nCollating error logs..." | tee -a "$LOG_FILE"
 grep -B10 -A50 "PLEASE submit a bug report to" "$BC_LOGS_DIR"/*.log \
   > "$SCRIPT_LOGS_DIR/errors.txt"
 
