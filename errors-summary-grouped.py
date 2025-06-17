@@ -11,6 +11,7 @@ def parse_errors(file_path):
         r"llvm::ProgramSlice::populateBBsWithInsts\(llvm::Function\*\)",
         r"get_data_dependences_for",
         r"appendBlockGatesToPhiParent",
+        r"removeInstructions",
         r"Instruction does not dominate all uses!",
         r"PHINode should have one entry for each predecessor of its parent basic block!",
         r"PHI node has multiple entries for the same basic block with different incoming values!",
@@ -78,9 +79,9 @@ def parse_errors(file_path):
         ):
             writer.writerow([err, cnt])
 
-    print(f"--> ummary written to: {summary_csv}")
-    print(f"--> rror counts written to: {counts_csv}")
-    print(f"--> otal files with at least one error: {total_files}")
+    print(f"--> Summary written to: {summary_csv}")
+    print(f"--> Error counts written to: {counts_csv}")
+    print(f"--> Total files with at least one error: {total_files}")
 
 
 if __name__ == "__main__":

@@ -218,7 +218,7 @@ python3 "$SCRIPT_DIR/errors-summary-grouped.py" "$SCRIPT_LOGS_DIR/errors.txt"
 # Analyze comparison results
 python3 analyze_comparison_results.py > "$SCRIPT_LOGS_DIR/comparison_analysis.txt"
 tee -a "$LOG_FILE" < "$SCRIPT_LOGS_DIR/comparison_analysis.txt"
-echo -e "--> omparison analysis written to: $SCRIPT_LOGS_DIR/comparison_analysis.txt"
+echo -e "--> Comparison analysis written to: $SCRIPT_LOGS_DIR/comparison_analysis.txt"
 
 # Print dots if requested
 if [[ "${PRINT_DOTS:-false}" == "true" ]]; then

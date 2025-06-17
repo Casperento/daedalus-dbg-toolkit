@@ -4,23 +4,42 @@ SOURCES_DIR="./output/sources"
 OUTPUT_DIR="./output/extended_bc_logs"
 LIBDAEDALUS_DIR="$HOME/src/github/Daedalus/build/lib/libdaedalus.so"
 SINGLE_FILE=""
+CLEAN_OUTPUT=0
 
 # Parse options
-while getopts "f:" opt; do
+while getopts "f:c-:" opt; do
   case $opt in
     f)
       SINGLE_FILE="$OPTARG"
       ;;
+    c)
+      CLEAN_OUTPUT=1
+      ;;
+    -)
+      case $OPTARG in
+        clean)
+          CLEAN_OUTPUT=1
+          ;;
+        *)
+          echo "Usage: $0 [-f <file.ll>] [-c|--clean]"
+          exit 1
+          ;;
+      esac
+      ;;
     *)
-      echo "Usage: $0 [-f <file.ll>]"
+      echo "Usage: $0 [-f <file.ll>] [-c|--clean]"
       exit 1
       ;;
   esac
 done
 
-if [ -d "$OUTPUT_DIR" ]; then
-  rm -rf "$OUTPUT_DIR"
+if [ $CLEAN_OUTPUT -eq 1 ]; then
+  if [ -d "$OUTPUT_DIR" ]; then
+    rm -rf "$OUTPUT_DIR"
+    echo "Removed $OUTPUT_DIR."
+  fi
 fi
+
 mkdir -p "$OUTPUT_DIR"
 
 process_ll_file() {
