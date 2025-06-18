@@ -1,6 +1,6 @@
-# Daedalus Errors Debugging Framework
+# Daedalus Errors Debugging Toolkit
 
-This project provides a set of scripts and utilities to automate the process of building, testing, debugging, and reducing LLVM IR programs. The framework is designed to work with the Daedalus LLVM pass and the LLVM Test Suite.
+This repository offers a collection of scripts and tools to streamline building, testing, debugging, and minimizing LLVM IR programs. It is tailored for use with the Daedalus LLVM pass and integrates with the LLVM Test Suite.
 
 ## Project Structure
 
@@ -11,7 +11,13 @@ This project provides a set of scripts and utilities to automate the process of 
 ├── list-errors.sh
 ├── reduce-programs.sh
 ├── extract-func.sh
+├── expand-logs.sh
+├── ll2dot.sh
+├── print-dots.sh
+├── script.sh
+├── txt2filecheckpattern.sh
 ├── errors-summary-grouped.py
+├── analyze_comparison_results.py
 ├── errors_summary/
 │   ├── errors_counts.csv
 │   ├── errors_summary_grouped.csv
@@ -181,7 +187,63 @@ To configure a Python virtual environment and install the required packages (`pa
 
 ---
 
-### 6. `errors-summary-grouped.py`
+### 6. `expand-logs.sh`
+
+**Purpose**: Expands or processes log files, supporting both single file and directory modes. Can also clean up generated files.
+
+**Usage**:
+```bash
+./expand-logs.sh [-f <file.ll>] [-c|--clean]
+```
+
+**Options**:
+- `-f <file.ll>`: Process a single `.ll` file.
+- `-c`, `--clean`: Clean up generated files.
+
+---
+
+### 7. `ll2dot.sh`
+
+**Purpose**: Converts `.ll` files to `.dot` files and then to PDF for visualizing control flow graphs of LLVM IR files.
+
+**Usage**:
+```bash
+./ll2dot.sh [directory]
+```
+
+**Arguments**:
+- `[directory]`: Directory containing `.ll` files (default: current directory).
+
+---
+
+### 8. `print-dots.sh`
+
+**Purpose**: Prints or processes `.dot` files. (Add details as needed based on script functionality.)
+
+---
+
+### 9. `script.sh`
+
+**Purpose**: (Describe the purpose or remove if not needed.)
+
+---
+
+### 10. `txt2filecheckpattern.sh`
+
+**Purpose**: Converts a text file to a file-check pattern, with argument parsing and help options.
+
+**Usage**:
+```bash
+./txt2filecheckpattern.sh -f <inputfile>
+```
+
+**Options**:
+- `-f, --file <inputfile>`: Input file to process.
+- `-h, --help`: Show help message.
+
+---
+
+### 11. `errors-summary-grouped.py`
 
 **Purpose**: Analyzes error logs and generates grouped summaries and counts of errors.
 
@@ -204,7 +266,22 @@ python3 errors-summary-grouped.py output/logs/errors.txt
 
 ---
 
+### 12. `analyze_comparison_results.py`
 
+**Purpose**: Analyzes TSV comparison results, computes statistics and summaries for program differences.
+
+**Usage**:
+```bash
+python3 analyze_comparison_results.py <comparison_results.tsv>
+```
+
+**Arguments**:
+- `<comparison_results.tsv>`: Path to the TSV file with comparison results.
+
+**Output**:
+- Summary statistics and categorized program changes.
+
+---
 
 ## Workflow
 
@@ -225,5 +302,19 @@ python3 errors-summary-grouped.py output/logs/errors.txt
 
 6. **Extract Functions**:
    Use `extract-func.sh` to extract a single function from an LLVM IR file for focused debugging or analysis.
+
+7. **Expand Logs**:
+   Use `expand-logs.sh` to process or clean up log files.
+
+8. **Visualize IR**:
+   Use `ll2dot.sh` to generate control flow graph PDFs from `.ll` files.
+
+9. **Convert to FileCheck Pattern**:
+   Use `txt2filecheckpattern.sh` to generate file-check patterns from text files.
+
+10. **Analyze Comparison Results**:
+   Use `analyze_comparison_results.py` to summarize and categorize program differences.
+
+---
 
 
