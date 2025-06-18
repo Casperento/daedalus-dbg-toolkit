@@ -71,7 +71,7 @@ To configure a Python virtual environment and install the required packages (`pa
    pip list
    ```
 
-   Ensure `pandas`, `scipy`, and `psutil` are listed.
+   Ensure `pandas`, `scipy`, `psutil` and `tabulate` are listed.
 
 6. **Deactivate the Virtual Environment** (when done):
    ```bash
