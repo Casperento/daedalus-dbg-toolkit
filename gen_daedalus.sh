@@ -49,11 +49,19 @@ Options:
   --daedalus <path>        Path to Daedalus project (default: $DAEDALUS)
   --errors-dbg <path>      Directory for LIT log output (default: $ERRORS_DBG)
   --lit-results <path>     Directory for LIT results JSON (default: $LIT_RESULTS)
+  --max-slice-params <n>   Set -max-slice-params for Daedalus pass (default: 5)
+  --max-slice-size <n>     Set -max-slice-size for Daedalus pass (default: 40)
+  --max-slice-users <n>    Set -max-slice-users for Daedalus pass (default: 100)
 EOF
 }
 
+# Default values for new options
+MAX_SLICE_PARAMS=5
+MAX_SLICE_SIZE=40
+MAX_SLICE_USERS=100
+
 # Parse arguments
-if ! PARSED=$(getopt -o hcub:w:t: --long help,clean,upgrade,branch:,workers:,timeout:,llvm-project:,llvm-test-suite:,daedalus:,errors-dbg:,lit-results: -n "$(basename "$0")" -- "$@"); then
+if ! PARSED=$(getopt -o hcub:w:t: --long help,clean,upgrade,branch:,workers:,timeout:,llvm-project:,llvm-test-suite:,daedalus:,errors-dbg:,lit-results:,max-slice-params:,max-slice-size:,max-slice-users: -n "$(basename "$0")" -- "$@"); then
   usage; exit 1
 fi
 eval set -- "$PARSED"
@@ -70,6 +78,9 @@ while true; do
     --daedalus) DAEDALUS="$2"; shift 2;;
     --errors-dbg) ERRORS_DBG="$2"; shift 2;;
     --lit-results) LIT_RESULTS="$2"; shift 2;;
+    --max-slice-params) MAX_SLICE_PARAMS="$2"; shift 2;;
+    --max-slice-size) MAX_SLICE_SIZE="$2"; shift 2;;
+    --max-slice-users) MAX_SLICE_USERS="$2"; shift 2;;
     --) shift; break;;
     *) echo "Unknown option: $1"; usage; exit 1;;
   esac
@@ -111,21 +122,47 @@ echo "Building libdaedalus.so..."
 cmake -G Ninja -DLLVM_DIR="$LLVM_PROJECT" -S "$DAEDALUS" -B "$DAEDALUS/build"
 cmake --build "$DAEDALUS/build"
 
+echo "MAX_SLICE_PARAMS=$MAX_SLICE_PARAMS"
+echo "MAX_SLICE_SIZE=$MAX_SLICE_SIZE"
+echo "MAX_SLICE_USERS=$MAX_SLICE_USERS"
+
 # Build LLVM test suite
 echo "Building LLVM test suite with Daedalus plugin..."
-cmake -G Ninja \
-      -DCMAKE_C_COMPILER=clang \
-      -DCMAKE_CXX_COMPILER=clang++ \
-      -DCMAKE_C_FLAGS="-flto" \
-      -DCMAKE_CXX_FLAGS="-flto" \
-      -DCMAKE_EXE_LINKER_FLAGS="-flto -fuse-ld=lld -Wl,--plugin-opt=-lto-embed-bitcode=post-merge-pre-opt" \
-      -DTEST_SUITE_COLLECT_INSTCOUNT=ON \
-      -DTEST_SUITE_SELECTED_PASSES=daedalus \
-      "-DTEST_SUITE_PASSES_ARGS=-load-pass-plugin=$DAEDALUS/build/lib/libdaedalus.so" \
-      -DTEST_SUITE_COLLECT_COMPILE_TIME=OFF \
-      "-DTEST_SUITE_SUBDIRS=SingleSource;MultiSource" \
-      -C "$LLVM_TEST_SUITE/cmake/caches/Os.cmake" \
-      -S "$LLVM_TEST_SUITE" -B "$LLVM_TEST_SUITE/build"
+# Only add max-slice-* args if any were explicitly set by the user
+MAX_ARGS_SET=false
+if [[ ${MAX_SLICE_PARAMS} != 3 ]] || [[ ${MAX_SLICE_SIZE} != 20 ]] || [[ ${MAX_SLICE_USERS} != 50 ]]; then
+  MAX_ARGS_SET=true
+fi
+
+if [[ $MAX_ARGS_SET == true ]]; then
+  cmake -G Ninja \
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DCMAKE_C_FLAGS="-flto" \
+    -DCMAKE_CXX_FLAGS="-flto" \
+    -DCMAKE_EXE_LINKER_FLAGS="-flto -fuse-ld=lld -Wl,--plugin-opt=-lto-embed-bitcode=post-merge-pre-opt" \
+    -DTEST_SUITE_COLLECT_INSTCOUNT=ON \
+    -DTEST_SUITE_SELECTED_PASSES=daedalus \
+    -DTEST_SUITE_PASSES_ARGS=-load-pass-plugin=$DAEDALUS/build/lib/libdaedalus.so\;-max-slice-params=$MAX_SLICE_PARAMS\;-max-slice-size=$MAX_SLICE_SIZE\;-max-slice-users=$MAX_SLICE_USERS \
+    -DTEST_SUITE_COLLECT_COMPILE_TIME=OFF \
+    "-DTEST_SUITE_SUBDIRS=SingleSource;MultiSource" \
+    -C "$LLVM_TEST_SUITE/cmake/caches/Os.cmake" \
+    -S "$LLVM_TEST_SUITE" -B "$LLVM_TEST_SUITE/build"
+else
+  cmake -G Ninja \
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DCMAKE_C_FLAGS="-flto" \
+    -DCMAKE_CXX_FLAGS="-flto" \
+    -DCMAKE_EXE_LINKER_FLAGS="-flto -fuse-ld=lld -Wl,--plugin-opt=-lto-embed-bitcode=post-merge-pre-opt" \
+    -DTEST_SUITE_COLLECT_INSTCOUNT=ON \
+    -DTEST_SUITE_SELECTED_PASSES=daedalus \
+    -DTEST_SUITE_PASSES_ARGS=-load-pass-plugin=$DAEDALUS/build/lib/libdaedalus.so \
+    -DTEST_SUITE_COLLECT_COMPILE_TIME=OFF \
+    "-DTEST_SUITE_SUBDIRS=SingleSource;MultiSource" \
+    -C "$LLVM_TEST_SUITE/cmake/caches/Os.cmake" \
+    -S "$LLVM_TEST_SUITE" -B "$LLVM_TEST_SUITE/build"
+fi
 
 # Allow build errors but continue
 if ! cmake --build "$LLVM_TEST_SUITE/build" -- -k 0 -j "$WORKERS"; then

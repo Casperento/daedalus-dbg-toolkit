@@ -140,16 +140,16 @@ grep --text -B2 ": Compar\(ison failed,\|ed:\)" \
      "$SCRIPT_LOGS_DIR/lit-output.log" \
      | awk '/\s*.reference_output/{print $NF}' \
      | sed 's/.*build\///g' \
-     > "$SCRIPT_LOGS_DIR/comparison_failed.log"
+     > "$SCRIPT_LOGS_DIR/comparison_failed.log" || true
 grep --text -oE ": error: (unable to open|child terminated)(.*)" \
      "$SCRIPT_LOGS_DIR/lit-output.log" \
      | awk '{print $6}' \
      | sed "s/.*build\/\(.*\)'/\1/g" \
-     > "$SCRIPT_LOGS_DIR/build_failed.log"
+     > "$SCRIPT_LOGS_DIR/build_failed.log" || true
 grep -A1000 "Slowest Tests:" "$SCRIPT_LOGS_DIR/lit-output.log" \
      | grep -B1000 "Tests Times:" \
      | sed '$d' \
-     > "$SCRIPT_LOGS_DIR/slowest_tests.log"
+     > "$SCRIPT_LOGS_DIR/slowest_tests.log" || true
 
 echo "Filtered logs written to $SCRIPT_LOGS_DIR" | tee -a "$LOG_FILE"
 
@@ -167,7 +167,8 @@ echo "Comparison results: $COMPARISON_RESULTS" | tee -a "$LOG_FILE"
 
 # Step 3: List failing test files
 grep -oP "(?<=:: ).*?(?=' has no metrics)" "$COMPARISON_RESULTS" \
-  | sed 's/\.test$/\.e.bc/' > "$FILES_LIST"
+     | sed 's/\.test$/\.e.bc/' \
+     > "$FILES_LIST" || true
 echo "Files list: $FILES_LIST" | tee -a "$LOG_FILE"
 
 # Step 4: Extract source .ll files
