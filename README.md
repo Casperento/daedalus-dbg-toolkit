@@ -1,4 +1,4 @@
-# Daedalus Errors Debugging Toolkit
+# Daedalus Debugging Toolkit
 
 This repository offers a collection of scripts and tools to streamline building, testing, debugging, and minimizing LLVM IR programs. It is tailored for use with the Daedalus LLVM pass and integrates with the LLVM Test Suite.
 
