@@ -57,6 +57,13 @@ process_ll_file() {
       -load-pass-plugin "$libdaedalus_dir" \
       -disable-output "$ll_file" \
       &> "$output_file"
+
+  # Move any *.parent_module.ll files to the output directory
+  shopt -s nullglob
+  for pm_file in *.parent_module.ll; do
+    mv "$pm_file" "$output_dir/"
+  done
+  shopt -u nullglob
 }
 
 # If a single file is provided, process only that file

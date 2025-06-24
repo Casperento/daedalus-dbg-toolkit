@@ -22,11 +22,11 @@ set -euo pipefail
 IFS=$'\n\t'
 
 # Default configuration
-LLVM_PROJECT="/home/reckstein/src/github/llvm-project"
-LLVM_TEST_SUITE="/home/reckstein/src/github/llvm-test-suite"
-DAEDALUS="/home/reckstein/src/github/Daedalus"
+LLVM_PROJECT="$HOME/src/github/llvm-project"
+LLVM_TEST_SUITE="$HOME/src/github/llvm-test-suite"
+DAEDALUS="$HOME/src/github/Daedalus"
 ERRORS_DBG="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" # current script directory
-LIT_RESULTS="/home/reckstein/lit-results"
+LIT_RESULTS="$HOME/lit-results"
 DAEDALUS_BRANCH="main"
 WORKERS=10
 TIMEOUT=120
@@ -130,7 +130,7 @@ echo "MAX_SLICE_USERS=$MAX_SLICE_USERS"
 echo "Building LLVM test suite with Daedalus plugin..."
 # Only add max-slice-* args if any were explicitly set by the user
 MAX_ARGS_SET=false
-if [[ ${MAX_SLICE_PARAMS} != 3 ]] || [[ ${MAX_SLICE_SIZE} != 20 ]] || [[ ${MAX_SLICE_USERS} != 50 ]]; then
+if [[ ${MAX_SLICE_PARAMS} != 5 ]] || [[ ${MAX_SLICE_SIZE} != 40 ]] || [[ ${MAX_SLICE_USERS} != 100 ]]; then
   MAX_ARGS_SET=true
 fi
 
@@ -148,6 +148,24 @@ if [[ $MAX_ARGS_SET == true ]]; then
     "-DTEST_SUITE_SUBDIRS=SingleSource;MultiSource" \
     -C "$LLVM_TEST_SUITE/cmake/caches/Os.cmake" \
     -S "$LLVM_TEST_SUITE" -B "$LLVM_TEST_SUITE/build"
+
+  # SPEC2017 configuration
+  # cmake -G Ninja \
+  #   -DCMAKE_C_COMPILER=clang \
+  #   -DCMAKE_CXX_COMPILER=clang++ \
+  #   -DCMAKE_C_FLAGS="-flto" \
+  #   -DCMAKE_CXX_FLAGS="-flto" \
+  #   -DCMAKE_EXE_LINKER_FLAGS="-flto -fuse-ld=lld -Wl,--plugin-opt=-lto-embed-bitcode=post-merge-pre-opt" \
+  #   -DTEST_SUITE_COLLECT_INSTCOUNT=ON \
+  #   -DTEST_SUITE_SELECTED_PASSES=daedalus \
+  #   -DTEST_SUITE_PASSES_ARGS="-load-pass-plugin=$DAEDALUS/build/lib/libdaedalus.so;-max-slice-params=$MAX_SLICE_PARAMS;-max-slice-size=$MAX_SLICE_SIZE;-max-slice-users=$MAX_SLICE_USERS" \
+  #   -DTEST_SUITE_COLLECT_COMPILE_TIME=OFF \
+  #   -DTEST_SUITE_SUBDIRS=External \
+  #   "-DTEST_SUITE_SPEC2017_ROOT=$LLVM_TEST_SUITE/test-suite-externals/speccpu2017" \
+  #   -DTEST_SUITE_RUN_TYPE=train \
+  #   -C "$LLVM_TEST_SUITE/cmake/caches/Os.cmake" \
+  #   -S "$LLVM_TEST_SUITE" \
+  #   -B "$LLVM_TEST_SUITE/build"
 else
   cmake -G Ninja \
     -DCMAKE_C_COMPILER=clang \
@@ -161,7 +179,26 @@ else
     -DTEST_SUITE_COLLECT_COMPILE_TIME=OFF \
     "-DTEST_SUITE_SUBDIRS=SingleSource;MultiSource" \
     -C "$LLVM_TEST_SUITE/cmake/caches/Os.cmake" \
-    -S "$LLVM_TEST_SUITE" -B "$LLVM_TEST_SUITE/build"
+    -S "$LLVM_TEST_SUITE" \
+    -B "$LLVM_TEST_SUITE/build"
+
+  # SPEC2017 configuration
+  # cmake -G Ninja \
+  #   -DCMAKE_C_COMPILER=clang \
+  #   -DCMAKE_CXX_COMPILER=clang++ \
+  #   -DCMAKE_C_FLAGS="-flto" \
+  #   -DCMAKE_CXX_FLAGS="-flto" \
+  #   -DCMAKE_EXE_LINKER_FLAGS="-flto -fuse-ld=lld -Wl,--plugin-opt=-lto-embed-bitcode=post-merge-pre-opt" \
+  #   -DTEST_SUITE_COLLECT_INSTCOUNT=ON \
+  #   -DTEST_SUITE_SELECTED_PASSES=daedalus \
+  #   -DTEST_SUITE_PASSES_ARGS=-load-pass-plugin="$DAEDALUS/build/lib/libdaedalus.so" \
+  #   -DTEST_SUITE_COLLECT_COMPILE_TIME=OFF \
+  #   -DTEST_SUITE_SUBDIRS=External \
+  #   -DTEST_SUITE_SPEC2017_ROOT="$LLVM_TEST_SUITE/test-suite-externals/speccpu2017" \
+  #   -DTEST_SUITE_RUN_TYPE=train \
+  #   -C "$LLVM_TEST_SUITE/cmake/caches/Os.cmake" \
+  #   -S "$LLVM_TEST_SUITE" \
+  #   -B "$LLVM_TEST_SUITE/build"
 fi
 
 # Allow build errors but continue

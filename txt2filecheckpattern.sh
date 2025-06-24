@@ -1,5 +1,5 @@
 #!/bin/bash
-# filepath: /home/reckstein/src/github/errors-dbg-framework/txt2filecheckpattern.sh
+# filepath: $HOME/src/github/errors-dbg-framework/txt2filecheckpattern.sh
 
 # Parse arguments using getopt
 usage() {
