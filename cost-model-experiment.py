@@ -70,6 +70,16 @@ def main():
 
     print("All runs complete. See", log)
 
+    # Analyze the log file with analyze-experiment.py
+    print("\nAnalyzing log file with analyze-experiment.py...")
+    result = subprocess.run([
+        "python3", "analyze-experiment.py", log
+    ], capture_output=True, text=True)
+    print(result.stdout)
+    if result.returncode != 0:
+        print("[!] analyze-experiment.py failed:")
+        print(result.stderr)
+
 
 if __name__ == "__main__":
     main()
