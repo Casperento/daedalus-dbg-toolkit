@@ -194,6 +194,8 @@ while IFS= read -r file; do
   if opt -passes=daedalus \
          -load-pass-plugin="$PLUGIN_DIR/libdaedalus.so" \
          -S "$src" -o "$SOURCES_SUCC_DIR/${base/.e.bc/.d.ll}" 2> "$BC_LOGS_DIR/$base.log"; then
+  # if opt -passes=func-merging \
+  #        -S "$src" -o "$SOURCES_SUCC_DIR/${base/.e.bc/.d.ll}" 2> "$BC_LOGS_DIR/$base.log"; then
     FAILED_COMP=$((FAILED_COMP + 1))
   else
     FAILED_BUILD=$((FAILED_BUILD + 1))
@@ -210,7 +212,7 @@ EOF
 
 # Step 6: Collate error logs
 grep -B10 -A50 "PLEASE submit a bug report to" "$BC_LOGS_DIR"/*.log \
-  > "$SCRIPT_LOGS_DIR/errors.txt"
+  > "$SCRIPT_LOGS_DIR/errors.txt" || true
 
 # Generate grouped summary
 python3 "$SCRIPT_DIR/errors-summary-grouped.py" "$SCRIPT_LOGS_DIR/errors.txt"

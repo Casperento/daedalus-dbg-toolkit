@@ -122,16 +122,15 @@ echo "Building libdaedalus.so..."
 cmake -G Ninja -DLLVM_DIR="$LLVM_PROJECT" -S "$DAEDALUS" -B "$DAEDALUS/build"
 cmake --build "$DAEDALUS/build"
 
-echo "MAX_SLICE_PARAMS=$MAX_SLICE_PARAMS"
-echo "MAX_SLICE_SIZE=$MAX_SLICE_SIZE"
-echo "MAX_SLICE_USERS=$MAX_SLICE_USERS"
-
 # Build LLVM test suite
 echo "Building LLVM test suite with Daedalus plugin..."
 # Only add max-slice-* args if any were explicitly set by the user
 MAX_ARGS_SET=false
 if [[ ${MAX_SLICE_PARAMS} != 5 ]] || [[ ${MAX_SLICE_SIZE} != 40 ]] || [[ ${MAX_SLICE_USERS} != 100 ]]; then
   MAX_ARGS_SET=true
+  echo "MAX_SLICE_PARAMS=$MAX_SLICE_PARAMS"
+  echo "MAX_SLICE_SIZE=$MAX_SLICE_SIZE"
+  echo "MAX_SLICE_USERS=$MAX_SLICE_USERS"
 fi
 
 if [[ $MAX_ARGS_SET == true ]]; then
@@ -181,6 +180,21 @@ else
     -C "$LLVM_TEST_SUITE/cmake/caches/Os.cmake" \
     -S "$LLVM_TEST_SUITE" \
     -B "$LLVM_TEST_SUITE/build"
+
+  #   cmake -G Ninja \
+  # -DCMAKE_C_COMPILER=clang \
+  # -DCMAKE_CXX_COMPILER=clang++ \
+  # -DCMAKE_C_FLAGS="-flto" \
+  # -DCMAKE_CXX_FLAGS="-flto" \
+  # -DCMAKE_EXE_LINKER_FLAGS="-flto -fuse-ld=lld -Wl,--plugin-opt=-lto-embed-bitcode=post-merge-pre-opt" \
+  # -DTEST_SUITE_COLLECT_INSTCOUNT=ON \
+  # -DTEST_SUITE_SELECTED_PASSES=func-merging \
+  # -DTEST_SUITE_PASSES_ARGS= \
+  # -DTEST_SUITE_COLLECT_COMPILE_TIME=OFF \
+  # "-DTEST_SUITE_SUBDIRS=SingleSource;MultiSource" \
+  # -C "$LLVM_TEST_SUITE/cmake/caches/Os.cmake" \
+  # -S "$LLVM_TEST_SUITE" \
+  # -B "$LLVM_TEST_SUITE/build"
 
   # SPEC2017 configuration
   # cmake -G Ninja \
