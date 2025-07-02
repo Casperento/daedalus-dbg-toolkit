@@ -14,10 +14,13 @@ This repository offers a collection of scripts and tools to streamline building,
 ├── expand-logs.sh
 ├── ll2dot.sh
 ├── print-dots.sh
-├── script.sh
+├── print-hardware-info.sh
+├── print-repo-info.sh
 ├── txt2filecheckpattern.sh
 ├── errors-summary-grouped.py
 ├── analyze_comparison_results.py
+├── analyze-experiment.py
+├── cost-model-experiment.py
 ├── errors_summary/
 │   ├── errors_counts.csv
 │   ├── errors_summary_grouped.csv
@@ -91,8 +94,13 @@ To configure a Python virtual environment and install the required packages (`pa
 ./gen_baseline.sh [options]
 ```
 
-**Options**: This script may require specific paths or configurations. Refer to the script for details.
-- `clean`: Cleans build directories before building
+**Options**:
+- `-h, --help`               Show help message and exit
+- `-c, --clean`              Clean build directory before building
+- `-w, --workers <n>`        Number of parallel workers (default: 10)
+- `-t, --timeout <n>`        Timeout to set for LIT (default: 120)
+- `--llvm-test-suite <path>` Path to LLVM test suite (default: $HOME/src/github/llvm-test-suite)
+- `--lit-results <path>`     Directory for LIT results JSON (default: $HOME/lit-results)
 
 ---
 
@@ -218,17 +226,79 @@ To configure a Python virtual environment and install the required packages (`pa
 
 ### 8. `print-dots.sh`
 
-**Purpose**: Prints or processes `.dot` files. (Add details as needed based on script functionality.)
+**Purpose**: Automates the generation of `.dot` files from one or more LLVM IR (`.ll`) files, organizing outputs and logging the process. It wraps and extends `ll2dot.sh` for batch processing and flexible output management.
+
+**Usage**:
+```bash
+./print-dots.sh [-o output_dir] [-l log_file] file1.ll [file2.ll ...]
+```
+
+**Options**:
+- `-o output_dir`   Output base directory (default: `output`)
+- `-l log_file`     Log file to append output (default: `/dev/null`)
+- `file1.ll ...`    One or more `.ll` files to process
+
+**Behavior**:
+- For each `.ll` file, creates a subdirectory under `<output_dir>/dots/<basename>`
+- Copies the `.ll` file to that directory
+- Invokes `ll2dot.sh` on the directory to generate `.dot` (and possibly PDF) files
+- Logs actions to the specified log file
+
+**Example**:
+```bash
+./print-dots.sh -o output -l print-dots.log output/sources/foo.ll output/sources/bar.ll
+```
+
+**Notes**:
+- Requires `ll2dot.sh` in the same directory.
+- Prints usage and exits if no input files are provided.
 
 ---
 
-### 9. `script.sh`
+### 9. `print-hardware-info.sh`
 
-**Purpose**: (Describe the purpose or remove if not needed.)
+**Purpose**: Prints a summary of the system's hardware information, including CPU, memory, GPU, and disk details. Useful for quickly gathering environment details for debugging or reporting.
+
+**Usage**:
+```bash
+./print-hardware-info.sh
+```
+
+**Output**:
+- Hostname
+- CPU model, sockets, threads, cores, and total CPUs (via `lscpu`)
+- Total and available memory (via `free -h`)
+- GPU/graphics card information (via `lspci`)
+- Disk usage for root filesystem (via `df -h /`)
+
+**Notes**:
+- If a command is not available, the script will print a warning for that section.
 
 ---
 
-### 10. `txt2filecheckpattern.sh`
+### 10. `print-repo-info.sh`
+
+**Purpose**: Prints basic information about a Git repository, including the current branch and latest commit hash. Useful for documenting the state of a codebase during experiments or debugging.
+
+**Usage**:
+```bash
+./print-repo-info.sh <path-to-git-repo>
+```
+
+**Arguments**:
+- `<path-to-git-repo>`: Path to the root directory of the Git repository.
+
+**Output**:
+- Repository path
+- Current branch name
+- Latest commit hash
+
+**Notes**:
+- Prints an error and exits if the path is not a Git repository or is missing.
+
+---
+
+### 11. `txt2filecheckpattern.sh`
 
 **Purpose**: Converts a text file to a file-check pattern, with argument parsing and help options.
 
@@ -243,7 +313,7 @@ To configure a Python virtual environment and install the required packages (`pa
 
 ---
 
-### 11. `errors-summary-grouped.py`
+### 12. `errors-summary-grouped.py`
 
 **Purpose**: Analyzes error logs and generates grouped summaries and counts of errors.
 
@@ -266,7 +336,7 @@ python3 errors-summary-grouped.py output/logs/errors.txt
 
 ---
 
-### 12. `analyze_comparison_results.py`
+### 13. `analyze_comparison_results.py`
 
 **Purpose**: Analyzes TSV comparison results, computes statistics and summaries for program differences.
 
@@ -280,6 +350,47 @@ python3 analyze_comparison_results.py <comparison_results.tsv>
 
 **Output**:
 - Summary statistics and categorized program changes.
+
+---
+
+### 14. `analyze-experiment.py`
+
+**Purpose**: Parses one or more dbg-toolkit experiment report files, extracting summary statistics, file paths, runtime, and ASCII-art tables into structured data. When given multiple files, it can compare runs and identify which log has the greatest Instcount geomean among "got smaller" metrics.
+
+**Usage**:
+```bash
+python3 analyze-experiment.py <report_file> [-o output.json]
+```
+
+**Arguments**:
+- `<report_file>`: Path to a dbg-toolkit report file (log file from experiment runs).
+- `-o, --output <output.json>`: (Optional) Write parsed results to a JSON file.
+
+**Output**:
+- Prints parsed summary and table data for each run.
+- Identifies runs with greatest reduction/growth in Instcount and Size.text metrics.
+- Optionally writes all parsed data to a JSON file.
+
+---
+
+### 15. `cost-model-experiment.py`
+
+**Purpose**: Automates running the Daedalus LLVM pass (`gen_daedalus.sh`) over a grid of slice parameters, logging results, and analyzing them with `analyze-experiment.py`.
+
+**Usage**:
+```bash
+python3 cost-model-experiment.py [--log-file <log>] [--params N ...] [--sizes N ...] [--users N ...]
+```
+
+**Options**:
+- `--log-file, -l <log>`: File to append stdout/stderr to (default: `transform.log`).
+- `--params N ...`: Values for `-max-slice-params` (default: 5).
+- `--sizes N ...`: Values for `-max-slice-size` (default: 40).
+- `--users N ...`: Values for `-max-slice-users` (default: 100).
+
+**Behavior**:
+- Runs `gen_daedalus.sh` for each combination of parameters, logs output, and prints a header for each run.
+- After all runs, analyzes the log file with `analyze-experiment.py` and prints the summary.
 
 ---
 
@@ -313,7 +424,7 @@ python3 analyze_comparison_results.py <comparison_results.tsv>
    Use `txt2filecheckpattern.sh` to generate file-check patterns from text files.
 
 10. **Analyze Comparison Results**:
-   Use `analyze_comparison_results.py` to summarize and categorize program differences.
+   Use the provided Python scripts to analyze and summarize comparison metrics.
 
 ---
 

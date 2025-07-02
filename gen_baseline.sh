@@ -6,25 +6,46 @@ LIT_RESULTS="$HOME/lit-results"
 TIMEOUT=120
 WORKERS=10
 
-function usage() {
-    echo "Usage: $0 [clean]"
-    echo "  clean: Removes and recreates the build directory before proceeding."
-    exit 1
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") [options]
+
+Options:
+  -h, --help               Show this help message and exit
+  -c, --clean              Clean build directory before building
+  -w, --workers <n>        Number of parallel workers (default: $WORKERS)
+  -t, --timeout <n>        Timeout to set for LIT (default $TIMEOUT)
+  --llvm-test-suite <path> Path to LLVM test suite (default: $LLVM_TEST_SUITE)
+  --lit-results <path>     Directory for LIT results JSON (default: $LIT_RESULTS)
+EOF
 }
 
-if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-    usage
+# Parse arguments
+if ! PARSED=$(getopt -o hcw:t: --long help,clean,workers:,timeout:,llvm-test-suite:,lit-results: -n "$(basename "$0")" -- "$@"); then
+    usage; exit 1
 fi
+eval set -- "$PARSED"
+CLEAN=false
+while true; do
+    case "$1" in
+        -h|--help) usage; exit 0;;
+        -c|--clean) CLEAN=true; shift;;
+        -w|--workers) WORKERS="$2"; shift 2;;
+        -t|--timeout) TIMEOUT="$2"; shift 2;;
+        --llvm-test-suite) LLVM_TEST_SUITE="$2"; shift 2;;
+        --lit-results) LIT_RESULTS="$2"; shift 2;;
+        --) shift; break;;
+        *) echo "Unknown option: $1"; usage; exit 1;;
+    esac
+done
 
-if [[ "$1" == "clean" ]]; then
+# Clean step
+if [[ "$CLEAN" == true ]]; then
     if [[ -d "$LLVM_TEST_SUITE/build" ]]; then
         rm -rf "$LLVM_TEST_SUITE/build/"*
     else
         mkdir -p "$LLVM_TEST_SUITE/build"
     fi
-elif [[ -n "$1" ]]; then
-    echo "Error: Unknown argument '$1'"
-    usage
 fi
 
 cmake -G "Ninja" \
