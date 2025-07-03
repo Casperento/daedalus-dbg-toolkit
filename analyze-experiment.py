@@ -191,8 +191,12 @@ def main():
     runs = parse_all_reports(args.input_files[0])
 
     # Print all runs content pretty
-    print("\nAll parsed runs:")
-    print(json.dumps(runs, indent=2))
+    # Write all parsed runs to a JSON file named after the input file
+    input_base = args.input_files[0].rsplit(".", 1)[0]
+    json_filename = f"{input_base}.json"
+    with open(json_filename, "w") as jf:
+        json.dump(runs, jf, indent=2)
+    print(f"\nAll parsed runs written to {json_filename}")
 
     for metric in ("Instcount", "Size.text"):
         # Greatest reduction from smaller
