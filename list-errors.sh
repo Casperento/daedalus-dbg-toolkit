@@ -6,16 +6,6 @@
 #        generate LLVM IR sources, and collate error logs for analysis.
 #        Supports configurable build, plugin, results, and output directories.
 #
-# Usage examples:
-#  # Basic invocation with positional args
-#  ./list-errors.sh /path/to/build /path/to/libdaedalus /path/to/lit-results
-#
-#  # Using long-form options
-#  ./list-errors.sh \
-#      --build-dir=/path/to/build \
-#      --plugin-dir=/path/to/libdaedalus \
-#      --results-dir=/path/to/lit-results \
-#      --output-dir=/path/to/output
 #
 set -euo pipefail
 IFS=$'\n\t'
@@ -54,13 +44,15 @@ Options:
   --output-dir <path>       Output base directory (default: $OUTPUT_DIR)
   --print-dots              Print dots after processing (default: no)
   --clear                   Clear output directories before processing (default: no)
+  --full-logs               Print full debug logs when calling opt (default: no)
 EOF
 }
 
 # Parse options
 PRINT_DOTS=false
 CLEAR_OUTPUT=false
-PARSED=$(getopt -o h --long help,build-dir:,plugin-dir:,results-dir:,output-dir:,print-dots,clear -n "$(basename "$0")" -- "$@")
+FULL_LOGS=false
+PARSED=$(getopt -o h --long help,build-dir:,plugin-dir:,results-dir:,output-dir:,print-dots,clear,full-logs -n "$(basename "$0")" -- "$@")
 eval set -- "$PARSED"
 while true; do
   case "$1" in
@@ -78,6 +70,8 @@ while true; do
       PRINT_DOTS=true; shift;;
     --clear)
       CLEAR_OUTPUT=true; shift;;
+    --full-logs)
+      FULL_LOGS=true; shift;;
     --)
       shift; break;;
     *)
@@ -184,6 +178,12 @@ while IFS= read -r file; do
   fi
 done < "$FILES_LIST"
 
+# Sort the files list by basename and store the sorted list in FILES_LIST_SORTED
+FILES_LIST_SORTED="$SCRIPT_LOGS_DIR/files-list-sorted.txt"
+awk '{print $0}' "$FILES_LIST" | while read -r file; do
+  echo "$(basename "$file"):$file"
+done | sort | cut -d: -f2 > "$FILES_LIST_SORTED"
+
 # Step 5: Apply Daedalus pass and log results
 echo -e "\nRunning Daedalus pass..." | tee -a "$LOG_FILE"
 TOTAL=0; FAILED_BUILD=0; FAILED_COMP=0
@@ -191,16 +191,31 @@ while IFS= read -r file; do
   TOTAL=$((TOTAL + 1))
   src="$BUILD_DIR/$file"
   base=$(basename "$file")
-  if opt -passes=daedalus \
-         -load-pass-plugin="$PLUGIN_DIR/libdaedalus.so" \
-         -S "$src" -o "$SOURCES_SUCC_DIR/${base/.e.bc/.d.ll}" 2> "$BC_LOGS_DIR/$base.log"; then
-  # if opt -passes=func-merging \
-  #        -S "$src" -o "$SOURCES_SUCC_DIR/${base/.e.bc/.d.ll}" 2> "$BC_LOGS_DIR/$base.log"; then
-    FAILED_COMP=$((FAILED_COMP + 1))
+  echo -e "\nRunning opt over: ${file/.e.bc/.ll}" | tee -a "$LOG_FILE"
+  if [[ "${FULL_LOGS:-false}" == "true" ]]; then
+    if opt -debug-only=daedalus,ProgramSlice -stats -passes=daedalus \
+      -load-pass-plugin="$PLUGIN_DIR/libdaedalus.so" \
+      -S "$src" -disable-output > /dev/null 2> "$BC_LOGS_DIR/$base.log"; then
+      echo -e "\tFailed comparison..." | tee -a "$LOG_FILE"
+      FAILED_COMP=$((FAILED_COMP + 1))
+      mv "$SCRIPT_DIR"/*_slices_report.log "$BC_LOGS_DIR/" || true
+    else
+      echo -e "\tFailed build..." | tee -a "$LOG_FILE"
+      FAILED_BUILD=$((FAILED_BUILD + 1))
+    fi
+    mv "$SCRIPT_DIR"/*.parent_module.ll "$SOURCES_SUCC_DIR/" || true
   else
-    FAILED_BUILD=$((FAILED_BUILD + 1))
+    if opt -passes=daedalus \
+      -load-pass-plugin="$PLUGIN_DIR/libdaedalus.so" \
+      -S "$src" -o "$SOURCES_SUCC_DIR/${base/.e.bc/.d.ll}" 2> "$BC_LOGS_DIR/$base.log"; then
+      echo -e "\tFailed comparison..." | tee -a "$LOG_FILE"
+      FAILED_COMP=$((FAILED_COMP + 1))
+    else
+      echo -e "\tFailed build..." | tee -a "$LOG_FILE"
+      FAILED_BUILD=$((FAILED_BUILD + 1))
+    fi
   fi
-done < "$FILES_LIST"
+done < "$FILES_LIST_SORTED"
 
 # Summary
 cat <<EOF | tee -a "$LOG_FILE"
@@ -216,6 +231,12 @@ grep -B10 -A50 "PLEASE submit a bug report to" "$BC_LOGS_DIR"/*.log \
 
 # Generate grouped summary
 python3 "$SCRIPT_DIR/errors-summary-grouped.py" "$SCRIPT_LOGS_DIR/errors.txt"
+
+# Filter faulty functions' names into a file
+grep '.*.log-Original' output/script_logs/errors.txt \
+| sed 's/\(.*\).e.bc.log-Original function name/\1/g' \
+| sed 's/\(.*\)\/bc_logs\/\(.*\):/\1\/sources\/\2.ll/g' \
+> "$SCRIPT_LOGS_DIR/faulty_functions.txt"
 
 # Analyze comparison results
 python3 analyze_comparison_results.py > "$SCRIPT_LOGS_DIR/comparison_analysis.txt"
