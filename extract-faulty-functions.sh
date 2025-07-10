@@ -22,8 +22,35 @@ if [[ ! -x "$EXTRACT_FUNC_SCRIPT" ]]; then
   exit 1
 fi
 
+OUTPUT_DIR=""
+
+# Parse arguments for this script
+usage() {
+  echo "Usage: $0 [-o <output-folder>]" >&2
+  exit 1
+}
+
+while getopts "o:h" opt; do
+  case $opt in
+    o) OUTPUT_DIR="$OPTARG" ;;
+    h) usage ;;
+    *) usage ;;
+  esac
+done
+
+# If not set, default to ./extracted_faulty_functions
+if [[ -z "$OUTPUT_DIR" ]]; then
+  OUTPUT_DIR="$SCRIPT_DIR/extracted_faulty_functions"
+fi
+mkdir -p "$OUTPUT_DIR"
+
 while IFS= read -r line; do
   if [[ -n "$line" ]]; then
-    eval "bash \"$EXTRACT_FUNC_SCRIPT\" $line"
+    # Expecting $line to be: <llvm-ir-file> <function-name>
+    llfile="$(echo $line | awk '{print $1}')"
+    funcname="$(echo $line | awk '{print $2}')"
+    # escape funcname for use in a bash command
+    funcname=$(printf '%q' "$funcname")
+    eval "bash $EXTRACT_FUNC_SCRIPT -i \"$llfile\" -f \"$funcname\" -o \"$OUTPUT_DIR\""
   fi
 done < "$FAULTY_FUNCTIONS_FILE"
