@@ -41,7 +41,7 @@ printPDFs() {
         output_pdf_dir="${TARGET_DIR%/}/$pdfname"
         printf "Function name: %s\n" "$funcname"
         printf "\tPDF Name: %s\n\n" "$pdfname"
-        # convertDotToPdf "$dotfile" "$output_pdf_dir" "$pdfname" || continue
+        convertDotToPdf "$dotfile" "$output_pdf_dir" "$pdfname" || continue
         rm "$dotfile"
     done
 }
