@@ -223,7 +223,7 @@ fi
 
 # Run LIT tests
 echo "Running LIT tests..."
-# if ! llvm-lit \
+# if ! python3 $(which llvm-lit) \
 #      --time-tests \
 #      --ignore-fail \
 #      --verbose \
@@ -236,7 +236,7 @@ echo "Running LIT tests..."
 #      | tee -a "$ERRORS_DBG/lit-output.log"; then
 #   echo "Error: LIT tests failed. Log saved to $ERRORS_DBG/lit-output.log" >&2
 # fi
-if ! llvm-lit \
+if ! python3 $(which llvm-lit) \
      --time-tests \
      --ignore-fail \
      --verbose \

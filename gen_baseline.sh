@@ -83,7 +83,7 @@ cmake -G "Ninja" \
 
 cmake --build "$LLVM_TEST_SUITE/build" -- -k 0 -j $WORKERS
 
-# llvm-lit \
+# python3 $(which llvm-lit) \
 # --filter-out "GCC-C-execute.*" \
 # --timeout $TIMEOUT \
 # -j $WORKERS \
@@ -91,7 +91,7 @@ cmake --build "$LLVM_TEST_SUITE/build" -- -k 0 -j $WORKERS
 # -o "$LIT_RESULTS/baseline.json" \
 # "$LLVM_TEST_SUITE/build"
 
-llvm-lit \
+python3 $(which llvm-lit) \
 --timeout $TIMEOUT \
 -j $WORKERS \
 -s \
