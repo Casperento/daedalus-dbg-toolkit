@@ -236,7 +236,7 @@ python3 "$SCRIPT_DIR/errors-summary-grouped.py" "$SCRIPT_LOGS_DIR/errors.txt"
 grep '.*.log-Original' output/script_logs/errors.txt \
 | sed 's/\(.*\).e.bc.log-Original function name/\1/g' \
 | sed 's/\(.*\)\/bc_logs\/\(.*\):/\1\/sources\/\2.ll/g' \
-> "$SCRIPT_LOGS_DIR/faulty_functions.txt"
+> "$SCRIPT_LOGS_DIR/faulty_functions.txt" || true
 
 # Analyze comparison results
 python3 analyze_comparison_results.py > "$SCRIPT_LOGS_DIR/comparison_analysis.txt"
