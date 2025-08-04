@@ -51,7 +51,7 @@ process_ll_file() {
   local output_file="$output_dir/${filename}_errors.log"
   echo "Processing $ll_file..."
   opt -stats \
-      -debug-only=daedalus,ProgramSlice \
+      -debug-only=daedalus,ProgramSlice,PHIGateAnalyzer \
       -passes=daedalus \
       -load-pass-plugin "$libdaedalus_dir" \
       -disable-output "$ll_file" \

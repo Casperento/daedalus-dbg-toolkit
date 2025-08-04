@@ -193,7 +193,7 @@ while IFS= read -r file; do
   base=$(basename "$file")
   echo -e "\nRunning opt over: ${file/.e.bc/.ll}" | tee -a "$LOG_FILE"
   if [[ "${FULL_LOGS:-false}" == "true" ]]; then
-    if opt -debug-only=daedalus,ProgramSlice -stats -passes=daedalus \
+    if opt -debug-only=daedalus,ProgramSlice,PHIGateAnalyzer -stats -passes=daedalus \
       -load-pass-plugin="$PLUGIN_DIR/libdaedalus.so" \
       -S "$src" -disable-output > /dev/null 2> "$BC_LOGS_DIR/$base.log"; then
       echo -e "\tFailed comparison..." | tee -a "$LOG_FILE"

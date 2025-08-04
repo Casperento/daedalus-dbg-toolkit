@@ -49,7 +49,6 @@ This workflow can be adapted and extended depending on your debugging, analysis,
 ├── gen_baseline.sh                # Generate baseline.json for llvm-test-suite
 ├── gen_daedalus.sh                # Build/test Daedalus LLVM pass and test suite
 ├── list-errors.sh                 # Extract failing tests, IR sources, error logs
-├── reduce-programs.sh             # Reduce faulty LLVM IR programs
 ├── extract-func.sh                # Extract a function from an LLVM IR file
 ├── extract-faulty-functions.sh    # Extract all faulty functions listed in script_logs
 ├── expand-logs.sh                 # Expand/process log files, clean up generated files
@@ -78,7 +77,7 @@ This workflow can be adapted and extended depending on your debugging, analysis,
 
 - Bash
 - Python 3
-- LLVM tools (`opt`, `llvm-reduce`, `llvm-extract`)
+- LLVM tools (`opt`, `llvm-extract`)
 - CMake and Ninja (for building the LLVM Test Suite)
 
 ### Installing Required Packages
@@ -178,13 +177,6 @@ To configure a Python virtual environment and install the required packages (`pa
       - `--print-dots`              Print dots after processing (default: no)
       - `--clear`                   Clear output directories before processing (default: no)
       - `--full-logs`               Print full debug logs when calling opt (default: no)
-
-### `reduce-programs.sh`
-   - *Purpose*: Reduces faulty LLVM IR programs to minimal reproducing cases for debugging.
-   - *Usage*:
-     ```bash
-     ./reduce-programs.sh <sources_folder>
-     ```
 
 ### `extract-func.sh`
    - *Purpose*: Extracts a single function from an LLVM IR (.ll) file using llvm-extract.
