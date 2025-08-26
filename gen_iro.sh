@@ -8,14 +8,11 @@ IFS=$'\n\t'
 # Default configuration
 LLVM_PROJECT="$HOME/src/github/llvm-project"
 LLVM_TEST_SUITE="$HOME/src/github/llvm-test-suite"
-DAEDALUS="$HOME/src/github/Daedalus"
 ERRORS_DBG="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" # current script directory
 LIT_RESULTS="$HOME/lit-results"
-DAEDALUS_BRANCH="main"
 WORKERS=10
 TIMEOUT=120
 CLEAN=false
-UPGRADE=false
 
 usage() {
   cat <<EOF
@@ -24,22 +21,17 @@ Usage: $(basename "$0") [options]
 Options:
   -h, --help               Show this help message and exit
   -c, --clean              Clean build directories before building
-  -u, --upgrade            Fetch and pull latest Daedalus commits
-  -b, --branch <name>      Checkout this Daedalus branch (default: $DAEDALUS_BRANCH)
   -w, --workers <n>        Number of parallel workers (default: $WORKERS)
   -t, --timeout <n>        Timeout to set for LIT (default $TIMEOUT)
   --llvm-project <path>    Path to LLVM project (default: $LLVM_PROJECT)
   --llvm-test-suite <path> Path to LLVM test suite (default: $LLVM_TEST_SUITE)
   --errors-dbg <path>      Directory for LIT log output (default: $ERRORS_DBG)
   --lit-results <path>     Directory for LIT results JSON (default: $LIT_RESULTS)
-  --max-slice-params <n>   Set -max-slice-params for Daedalus pass (default: 5)
-  --max-slice-size <n>     Set -max-slice-size for Daedalus pass (default: 40)
-  --max-slice-users <n>    Set -max-slice-users for Daedalus pass (default: 100)
 EOF
 }
 
 # Parse arguments
-if ! PARSED=$(getopt -o hcub:w:t: --long help,clean,upgrade,branch:,workers:,timeout:,llvm-project:,llvm-test-suite:,errors-dbg:,lit-results: -n "$(basename "$0")" -- "$@"); then
+if ! PARSED=$(getopt -o hcub:w:t: --long help,clean,workers:,timeout:,llvm-project:,llvm-test-suite:,errors-dbg:,lit-results: -n "$(basename "$0")" -- "$@"); then
   usage; exit 1
 fi
 eval set -- "$PARSED"
@@ -47,8 +39,6 @@ while true; do
   case "$1" in
     -h|--help) usage; exit 0;;
     -c|--clean) CLEAN=true; shift;;
-    -u|--upgrade) UPGRADE=true; shift;;
-    -b|--branch) DAEDALUS_BRANCH="$2"; shift 2;;
     -w|--workers) WORKERS="$2"; shift 2;;
     -t|--timeout) TIMEOUT="$2"; shift 2;;
     --llvm-project) LLVM_PROJECT="$2"; shift 2;;
@@ -61,7 +51,7 @@ while true; do
 done
 
 # Validate directories
-for dir in "$LLVM_PROJECT" "$LLVM_TEST_SUITE" "$DAEDALUS" "$ERRORS_DBG" "$LIT_RESULTS"; do
+for dir in "$LLVM_PROJECT" "$LLVM_TEST_SUITE" "$ERRORS_DBG" "$LIT_RESULTS"; do
   if [[ ! -d "$dir" ]]; then
     echo "Error: Directory '$dir' does not exist." >&2
     exit 1
@@ -72,27 +62,13 @@ done
 if [[ "$CLEAN" == true ]]; then
   echo "Cleaning build directories..."
   rm -rf "$LLVM_TEST_SUITE/build"/* && echo "- Cleared $LLVM_TEST_SUITE/build"
-  rm -rf "$DAEDALUS/build"/*        && echo "- Cleared $DAEDALUS/build"
-fi
-
-# Upgrade step
-if [[ "$UPGRADE" == true ]]; then
-  echo "Updating Daedalus repo (branch: $DAEDALUS_BRANCH)..."
-  # Prevent uncommitted changes
-  if [[ -n $(git -C "$DAEDALUS" status --porcelain) ]]; then
-    echo "Error: Uncommitted changes in $DAEDALUS. Please commit or stash them." >&2
-    exit 1
-  fi
-  git -C "$DAEDALUS" fetch
-  git -C "$DAEDALUS" checkout "$DAEDALUS_BRANCH"
-  git -C "$DAEDALUS" pull
 fi
 
 script_start_time=$(date +%s)
 echo "$script_start_time" > "$ERRORS_DBG/experiment-start-time.log"
 
 # Build LLVM test suite
-echo "Building LLVM test suite with Daedalus plugin..."
+echo "Building LLVM test suite with IROutliner pass..."
 # iroutliner configuration
 cmake -G Ninja \
  -DCMAKE_C_COMPILER=clang \

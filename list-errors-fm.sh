@@ -77,7 +77,7 @@ if [[ -z "$BUILD_DIR" || -z "$RESULTS_DIR" ]]; then
 fi
 
 # Compute script and derived paths
-LOG_FILE="$SCRIPT_DIR/list-errors.log"
+LOG_FILE="$SCRIPT_DIR/list-errors-fm.log"
 SOURCES_DIR="$OUTPUT_DIR/sources"
 BC_LOGS_DIR="$OUTPUT_DIR/bc_logs"
 SCRIPT_LOGS_DIR="$OUTPUT_DIR/script_logs"
