@@ -79,7 +79,6 @@ cmake -G Ninja \
  -DTEST_SUITE_COLLECT_INSTCOUNT=ON \
  -DTEST_SUITE_SELECTED_PASSES=func-merging \
  -DTEST_SUITE_PASSES_ARGS= \
- -DTEST_SUITE_COLLECT_COMPILE_TIME=OFF \
  "-DTEST_SUITE_SUBDIRS=SingleSource;MultiSource" \
  -C "$LLVM_TEST_SUITE/cmake/caches/Os.cmake" \
  -S "$LLVM_TEST_SUITE" \
@@ -94,7 +93,6 @@ cmake -G Ninja \
 #   -DCMAKE_EXE_LINKER_FLAGS="-flto -fuse-ld=lld -Wl,--plugin-opt=-lto-embed-bitcode=post-merge-pre-opt" \
 #   -DTEST_SUITE_COLLECT_INSTCOUNT=ON \
 #   -DTEST_SUITE_SELECTED_PASSES=func-merging \
-#   -DTEST_SUITE_COLLECT_COMPILE_TIME=OFF \
 #   -DTEST_SUITE_SUBDIRS=External \
 #   -DTEST_SUITE_SPEC2017_ROOT="$LLVM_TEST_SUITE/test-suite-externals/speccpu2017" \
 #   -DTEST_SUITE_RUN_TYPE=train \

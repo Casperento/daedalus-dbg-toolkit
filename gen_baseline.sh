@@ -57,7 +57,6 @@ cmake -G "Ninja" \
       -DTEST_SUITE_COLLECT_INSTCOUNT=ON \
       -DTEST_SUITE_SELECTED_PASSES= \
       -DTEST_SUITE_PASSES_ARGS= \
-      -DTEST_SUITE_COLLECT_COMPILE_TIME=OFF \
       "-DTEST_SUITE_SUBDIRS=SingleSource;MultiSource" \
       -C "$LLVM_TEST_SUITE/cmake/caches/Os.cmake" \
       -S "$LLVM_TEST_SUITE" \
@@ -73,7 +72,6 @@ cmake -G "Ninja" \
 #       -DTEST_SUITE_COLLECT_INSTCOUNT=ON \
 #       -DTEST_SUITE_SELECTED_PASSES= \
 #       -DTEST_SUITE_PASSES_ARGS= \
-#       -DTEST_SUITE_COLLECT_COMPILE_TIME=OFF \
 #       -DTEST_SUITE_SUBDIRS=External \
 #       -DTEST_SUITE_SPEC2017_ROOT="$LLVM_TEST_SUITE/test-suite-externals/speccpu2017" \
 #       -DTEST_SUITE_RUN_TYPE=train \
@@ -83,16 +81,9 @@ cmake -G "Ninja" \
 
 cmake --build "$LLVM_TEST_SUITE/build" -- -k 0 -j $WORKERS
 
-# python3 $(which llvm-lit) \
-# --filter-out "GCC-C-execute.*" \
-# --timeout $TIMEOUT \
-# -j $WORKERS \
-# -s \
-# -o "$LIT_RESULTS/baseline.json" \
-# "$LLVM_TEST_SUITE/build"
-
 python3 $(which llvm-lit) \
 --timeout $TIMEOUT \
+--time-tests \
 -j $WORKERS \
 -s \
 -o "$LIT_RESULTS/baseline.json" \

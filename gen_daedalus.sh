@@ -143,7 +143,6 @@ if [[ $MAX_ARGS_SET == true ]]; then
     -DTEST_SUITE_COLLECT_INSTCOUNT=ON \
     -DTEST_SUITE_SELECTED_PASSES=daedalus \
     -DTEST_SUITE_PASSES_ARGS=-load-pass-plugin=$DAEDALUS/build/lib/libdaedalus.so\;-max-slice-params=$MAX_SLICE_PARAMS\;-max-slice-size=$MAX_SLICE_SIZE\;-max-slice-users=$MAX_SLICE_USERS \
-    -DTEST_SUITE_COLLECT_COMPILE_TIME=OFF \
     "-DTEST_SUITE_SUBDIRS=SingleSource;MultiSource" \
     -C "$LLVM_TEST_SUITE/cmake/caches/Os.cmake" \
     -S "$LLVM_TEST_SUITE" -B "$LLVM_TEST_SUITE/build"
@@ -158,7 +157,6 @@ if [[ $MAX_ARGS_SET == true ]]; then
   #   -DTEST_SUITE_COLLECT_INSTCOUNT=ON \
   #   -DTEST_SUITE_SELECTED_PASSES=daedalus \
   #   -DTEST_SUITE_PASSES_ARGS="-load-pass-plugin=$DAEDALUS/build/lib/libdaedalus.so;-max-slice-params=$MAX_SLICE_PARAMS;-max-slice-size=$MAX_SLICE_SIZE;-max-slice-users=$MAX_SLICE_USERS" \
-  #   -DTEST_SUITE_COLLECT_COMPILE_TIME=OFF \
   #   -DTEST_SUITE_SUBDIRS=External \
   #   "-DTEST_SUITE_SPEC2017_ROOT=$LLVM_TEST_SUITE/test-suite-externals/speccpu2017" \
   #   -DTEST_SUITE_RUN_TYPE=train \
@@ -175,7 +173,6 @@ else
     -DTEST_SUITE_COLLECT_INSTCOUNT=ON \
     -DTEST_SUITE_SELECTED_PASSES=daedalus \
     -DTEST_SUITE_PASSES_ARGS=-load-pass-plugin=$DAEDALUS/build/lib/libdaedalus.so \
-    -DTEST_SUITE_COLLECT_COMPILE_TIME=OFF \
     "-DTEST_SUITE_SUBDIRS=SingleSource;MultiSource" \
     -C "$LLVM_TEST_SUITE/cmake/caches/Os.cmake" \
     -S "$LLVM_TEST_SUITE" \
@@ -191,7 +188,6 @@ else
   # -DTEST_SUITE_COLLECT_INSTCOUNT=ON \
   # -DTEST_SUITE_SELECTED_PASSES=func-merging \
   # -DTEST_SUITE_PASSES_ARGS= \
-  # -DTEST_SUITE_COLLECT_COMPILE_TIME=OFF \
   # "-DTEST_SUITE_SUBDIRS=SingleSource;MultiSource" \
   # -C "$LLVM_TEST_SUITE/cmake/caches/Os.cmake" \
   # -S "$LLVM_TEST_SUITE" \
@@ -207,7 +203,6 @@ else
   #   -DTEST_SUITE_COLLECT_INSTCOUNT=ON \
   #   -DTEST_SUITE_SELECTED_PASSES=daedalus \
   #   -DTEST_SUITE_PASSES_ARGS=-load-pass-plugin="$DAEDALUS/build/lib/libdaedalus.so" \
-  #   -DTEST_SUITE_COLLECT_COMPILE_TIME=OFF \
   #   -DTEST_SUITE_SUBDIRS=External \
   #   -DTEST_SUITE_SPEC2017_ROOT="$LLVM_TEST_SUITE/test-suite-externals/speccpu2017" \
   #   -DTEST_SUITE_RUN_TYPE=train \
@@ -223,19 +218,6 @@ fi
 
 # Run LIT tests
 echo "Running LIT tests..."
-# if ! python3 $(which llvm-lit) \
-#      --time-tests \
-#      --ignore-fail \
-#      --verbose \
-#      --filter-out "GCC-C-execute.*" \
-#      --timeout $TIMEOUT \
-#      -j "$WORKERS" \
-#      -s \
-#      -o "$LIT_RESULTS/daedalus.json" \
-#      "$LLVM_TEST_SUITE/build" \
-#      | tee -a "$ERRORS_DBG/lit-output.log"; then
-#   echo "Error: LIT tests failed. Log saved to $ERRORS_DBG/lit-output.log" >&2
-# fi
 if ! python3 $(which llvm-lit) \
      --time-tests \
      --ignore-fail \
