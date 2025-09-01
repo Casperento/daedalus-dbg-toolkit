@@ -56,9 +56,9 @@ EOF
 }
 
 # Default values for new options
-MAX_SLICE_PARAMS=5
-MAX_SLICE_SIZE=40
-MAX_SLICE_USERS=100
+MAX_SLICE_PARAMS=1
+MAX_SLICE_SIZE=20
+MAX_SLICE_USERS=10
 
 # Parse arguments
 if ! PARSED=$(getopt -o hcub:w:t: --long help,clean,upgrade,branch:,workers:,timeout:,llvm-project:,llvm-test-suite:,daedalus:,errors-dbg:,lit-results:,max-slice-params:,max-slice-size:,max-slice-users: -n "$(basename "$0")" -- "$@"); then
@@ -126,7 +126,7 @@ cmake --build "$DAEDALUS/build"
 echo "Building LLVM test suite with Daedalus plugin..."
 # Only add max-slice-* args if any were explicitly set by the user
 MAX_ARGS_SET=false
-if [[ ${MAX_SLICE_PARAMS} != 5 ]] || [[ ${MAX_SLICE_SIZE} != 40 ]] || [[ ${MAX_SLICE_USERS} != 100 ]]; then
+if [[ ${MAX_SLICE_PARAMS} != 1 ]] || [[ ${MAX_SLICE_SIZE} != 20 ]] || [[ ${MAX_SLICE_USERS} != 10 ]]; then
   MAX_ARGS_SET=true
   echo "MAX_SLICE_PARAMS=$MAX_SLICE_PARAMS"
   echo "MAX_SLICE_SIZE=$MAX_SLICE_SIZE"
