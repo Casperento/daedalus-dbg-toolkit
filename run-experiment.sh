@@ -18,11 +18,10 @@ export PATH="$HOME/src/github/code-size/build/bin:$PATH"
 ./gen_fm.sh -c
 
 # Comparison report generation
-cd ~/lit-results || exit
 python ~/src/github/llvm-test-suite/utils/compare.py \
     --full --nodiff \
     -m instcount \
     -m size..text \
     -m exec_time \
     -m compile_time \
-    baseline.json iroutliner.json func-merging.json daedalus.json > comp-Os-fm-iro-daedalus.txt
+    ~/lit-results/baseline.json ~/lit-results/iroutliner.json ~/lit-results/func-merging.json ~/lit-results/daedalus.json > comp-Os-fm-iro-daedalus.txt
