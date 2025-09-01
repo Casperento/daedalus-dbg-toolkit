@@ -1,6 +1,7 @@
 import re
 import pandas as pd
 from tabulate import tabulate
+from typing import Tuple
 
 # ------------------------------------------------------------
 # Schema
@@ -74,7 +75,7 @@ def _pct_to_number_or_zero(tok: str) -> float:
     return _num_or_zero(t)
 
 
-def _split_program(line: str) -> tuple[str, str]:
+def _split_program(line: str) -> Tuple[str, str]:
     s = (line or "").rstrip()
     if not s:
         return "", ""
