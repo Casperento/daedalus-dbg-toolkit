@@ -142,6 +142,8 @@ python3 "$BUILD_DIR/../utils/compare.py" \
         --diff \
         -m instcount \
         -m size..text \
+        -m exec_time \
+        -m compile_time \
         "$RESULTS_DIR/baseline.json" \
         "$RESULTS_DIR/func-merging.json" \
         > "$COMPARISON_RESULTS"
