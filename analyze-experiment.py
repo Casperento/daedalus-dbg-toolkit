@@ -106,7 +106,7 @@ def main():
         # Greatest reduction from smaller
         counts_smaller = list(extract_metric_geomeans(runs, metric, "smaller"))
         if counts_smaller:
-            best = max(counts_smaller, key=lambda x: x[1])
+            best = min(counts_smaller, key=lambda x: x[2])
             print(f"Greatest reduction for {metric} (programs that got smaller):")
             print(f"  {best[0]} => Count: {best[1]} Geomean: {best[2]}")
         else:
@@ -114,7 +114,7 @@ def main():
         # Largest growth from larger
         counts_larger = list(extract_metric_geomeans(runs, metric, "larger"))
         if counts_larger:
-            worst = min(counts_larger, key=lambda x: x[1])
+            worst = max(counts_larger, key=lambda x: x[2])
             print(f"Largest growth for {metric} (programs that got larger):")
             print(f"  {worst[0]} => Count: {worst[1]} Geomean: {worst[2]}")
         else:
