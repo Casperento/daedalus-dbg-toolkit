@@ -31,7 +31,7 @@ print_usage() {
     echo "  -h, --help              Show this help message"
 }
 
-ARGS=$(getopt -o w:t:h --long workers:,timeout:,llvm-project:,code-size:,llvm-test-suite:,daedalus:,errors-dbg:,lit-results:,help -n "$0" -- "$@")
+ARGS=$(getopt -o w:t:h --long workers:,timeout:,venv:,llvm-project:,code-size:,llvm-test-suite:,daedalus:,errors-dbg:,lit-results:,help -n "$0" -- "$@")
 if [ $? -ne 0 ]; then
     print_usage
     exit 1
